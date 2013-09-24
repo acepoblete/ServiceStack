@@ -104,7 +104,7 @@ namespace ServiceStack.ServiceInterface.Auth
 
         public UserAuth UpdateUserAuth(UserAuth existingUser, UserAuth newUser, string password)
         {
-            ValidateNewUser(newUser, password);
+            ValidateNewUser(newUser, password ?? "this-is-a-hack!");
 
             return dbFactory.Run(db => {
                 AssertNoExistingUser(db, newUser, existingUser);
