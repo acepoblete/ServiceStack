@@ -12,10 +12,10 @@ namespace ServiceStack.ServiceInterface.Auth
     {
         public OAuthProvider() { }
 
-        public OAuthProvider(IResourceManager appSettings, string authRealm, string oAuthProvider)
+        public OAuthProvider(IAppSettings appSettings, string authRealm, string oAuthProvider)
             : this(appSettings, authRealm, oAuthProvider, "ConsumerKey", "ConsumerSecret") { }
 
-        public OAuthProvider(IResourceManager appSettings, string authRealm, string oAuthProvider,
+        public OAuthProvider(IAppSettings appSettings, string authRealm, string oAuthProvider,
                              string consumerKeyName, string consumerSecretName)
         {
             this.AuthRealm = appSettings.Get("OAuthRealm", authRealm);
@@ -43,7 +43,7 @@ namespace ServiceStack.ServiceInterface.Auth
         public string AccessTokenUrl { get; set; }
         public OAuthAuthorizer OAuthUtils { get; set; }
 
-        public override bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Auth request = null)
+        public override bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Authenticate request = null)
         {
             if (request != null)
             {
@@ -61,7 +61,7 @@ namespace ServiceStack.ServiceInterface.Auth
         /// <param name="session"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        public override object Authenticate(IServiceBase authService, IAuthSession session, Auth request)
+        public override object Authenticate(IServiceBase authService, IAuthSession session, Authenticate request)
         {
             var tokens = Init(authService, ref session, request);
 
@@ -113,7 +113,7 @@ namespace ServiceStack.ServiceInterface.Auth
         /// <param name="session"></param>
         /// <param name="request"> </param>
         /// <returns></returns>
-        protected IOAuthTokens Init(IServiceBase authService, ref IAuthSession session, Auth request)
+        protected IOAuthTokens Init(IServiceBase authService, ref IAuthSession session, Authenticate request)
         {
             if (request != null && !LoginMatchesSession(session, request.UserName))
             {

@@ -6,12 +6,11 @@ using System.Text;
 using System.Threading;
 using Funq;
 using NUnit.Framework;
-using ServiceStack.Common.Web;
-using ServiceStack.Service;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface.ServiceModel;
 using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints.Support;
 using ServiceStack.WebHost.Endpoints.Tests.Support;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Host;
@@ -36,9 +35,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		public ResponseStatus ResponseStatus { get; set; }
 	}
 
-	public class SecureService : IService<Secure>
+	public class SecureService : IService
 	{
-		public object Execute(Secure request)
+		public object Any(Secure request)
 		{
 			return new SecureResponse { Result = "Confidential" };
 		}
@@ -62,9 +61,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		public ResponseStatus ResponseStatus { get; set; }
 	}
 
-	public class InsecureService : IService<Insecure>
+	public class InsecureService : IService
 	{
-		public object Execute(Insecure request)
+		public object Any(Insecure request)
 		{
 			return new InsecureResponse { Result = "Public" };
 		}
@@ -89,7 +88,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 
 			public override void Configure(Container container)
 			{
-				this.RequestFilters.Add((req, res, dto) =>
+				this.GlobalRequestFilters.Add((req, res, dto) =>
 				{
 					var userPass = req.GetBasicAuthUserAndPassword();
 					if (userPass == null)
@@ -108,7 +107,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 						res.SetPermanentCookie("ss-session", sessionKey);
 					}
 				});
-				this.RequestFilters.Add((req, res, dto) =>
+				this.GlobalRequestFilters.Add((req, res, dto) =>
 				{
 					if (dto is Secure)
 					{
@@ -182,7 +181,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 			if (format == null) return;
 
 			var req = (HttpWebRequest)WebRequest.Create(
-				string.Format("http://localhost:82/{0}/syncreply/Secure", format));
+				string.Format("http://localhost:82/{0}/reply/Secure", format));
 
 			req.Headers[HttpHeaders.Authorization]
 				= "basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(AllowedUser + ":" + AllowedPass));
@@ -230,7 +229,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 			if (format == null) return;
 
 			var req = (HttpWebRequest)WebRequest.Create(
-				string.Format("{0}{1}/syncreply/Insecure", ServiceClientBaseUri, format));
+				string.Format("{0}{1}/reply/Insecure", ServiceClientBaseUri, format));
 
 			req.Headers[HttpHeaders.Authorization]
 				= "basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(AllowedUser + ":" + AllowedPass));
@@ -276,7 +275,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 			if (format == null) return;
 
 			var req = (HttpWebRequest)WebRequest.Create(
-				string.Format("http://localhost:82/{0}/syncreply/Secure", format));
+				string.Format("http://localhost:82/{0}/reply/Secure", format));
 
 			req.Headers[HttpHeaders.Authorization]
 				= "basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(AllowedUser + ":" + AllowedPass));
@@ -286,7 +285,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 			if (cookie != null)
 			{
 				req = (HttpWebRequest)WebRequest.Create(
-					string.Format("http://localhost:82/{0}/syncreply/Secure", format));
+					string.Format("http://localhost:82/{0}/reply/Secure", format));
 				req.CookieContainer.Add(new Cookie("ss-session", cookie.Value));
 
 				var dtoString = new StreamReader(req.GetResponse().GetResponseStream()).ReadToEnd();
@@ -302,7 +301,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 			if (format == null) return;
 
 			var req = (HttpWebRequest)WebRequest.Create(
-				string.Format("http://localhost:82/{0}/syncreply/Secure", format));
+				string.Format("http://localhost:82/{0}/reply/Secure", format));
 
 			req.CookieContainer = new CookieContainer();
 			req.CookieContainer.Add(new Cookie("ss-session", AllowedUser + "/" + Guid.NewGuid().ToString("N"), "/", "localhost"));
@@ -408,7 +407,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		{
 			protected override IServiceClient CreateNewServiceClient()
 			{
-				EndpointHandlerBase.ServiceManager = new ServiceManager(true, typeof(SecureService).Assembly);
+                EndpointHandlerBase.ServiceManager = new ServiceManager(typeof(SecureService).Assembly).Init();
 				return new DirectServiceClient(EndpointHandlerBase.ServiceManager);
 			}
 

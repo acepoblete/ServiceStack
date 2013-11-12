@@ -4,9 +4,9 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Threading;
 using Funq;
-using ServiceStack.Common.Extensions;
-using ServiceStack.Common.Web;
+using ServiceStack.Common;
 using ServiceStack.Configuration;
+using ServiceStack.Data;
 using ServiceStack.DataAnnotations;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
@@ -15,8 +15,9 @@ using ServiceStack.OrmLite.Sqlite;
 using ServiceStack.Plugins.ProtoBuf;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface;
-using ServiceStack.ServiceInterface.ServiceModel;
+using ServiceStack.ServiceModel;
 using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints.Tests.IntegrationTests;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Operations;
 
@@ -445,11 +446,11 @@ namespace ServiceStack.WebHost.Endpoints.Tests.Support.Host
 				.Add<GetHttpResult>("/gethttpresult")
 			;
 
-			container.Register<IResourceManager>(new ConfigurationResourceManager());
+			container.Register<IAppSettings>(new ConfigurationResourceManager());
 
 			//var appSettings = container.Resolve<IResourceManager>();
 
-			container.Register(c => new ExampleConfig(c.Resolve<IResourceManager>()));
+			container.Register(c => new ExampleConfig(c.Resolve<IAppSettings>()));
 			//var appConfig = container.Resolve<ExampleConfig>();
 
 			container.Register<IDbConnectionFactory>(c =>
@@ -517,11 +518,11 @@ namespace ServiceStack.WebHost.Endpoints.Tests.Support.Host
                 .Add<GetHttpResult>("/gethttpresult")
             ;
 
-            container.Register<IResourceManager>(new ConfigurationResourceManager());
+            container.Register<IAppSettings>(new ConfigurationResourceManager());
 
             //var appSettings = container.Resolve<IResourceManager>();
 
-            container.Register(c => new ExampleConfig(c.Resolve<IResourceManager>()));
+            container.Register(c => new ExampleConfig(c.Resolve<IAppSettings>()));
             //var appConfig = container.Resolve<ExampleConfig>();
 
             container.Register<IDbConnectionFactory>(c =>

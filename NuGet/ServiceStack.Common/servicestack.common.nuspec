@@ -3,7 +3,7 @@
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>ServiceStack.Common</id>
     <title>Service Clients and Common libs for ServiceStack projects</title>
-    <version>3.9.56</version>
+    <version>3.9.60</version>
     <authors>Demis Bellot</authors>
     <owners>Demis Bellot</owners>
     <summary>Opensource .NET and Mono REST Web Services framework</summary>
@@ -23,7 +23,7 @@
     <language>en-US</language>
     <copyright>servicestack.net 2012 and contributors</copyright>
     <dependencies>
-      <dependency id="ServiceStack.Text" />
+      <dependency id="ServiceStack.Text" version="4.0" />
     </dependencies>
   </metadata>
   <files>

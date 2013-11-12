@@ -8,9 +8,9 @@
     <ProjectGuid>{982416DB-C143-4028-A0C3-CF41892D18D3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ServiceStack.Common</RootNamespace>
+    <RootNamespace>ServiceStack</RootNamespace>
     <AssemblyName>ServiceStack.Common</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -31,6 +31,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -50,7 +51,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>bin\Release\ServiceStack.Common.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\ServiceStack.Common.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'STATIC_ONLY NO_EXPRESSIONS|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -106,9 +107,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CryptUtils.cs" />
-    <Compile Include="DictionaryExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="DictionaryExtensions.cs" />
     <Compile Include="DirectoryInfoExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -124,40 +123,11 @@
     <Compile Include="ExecExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Expressions\DelegateFactory.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\ActionExecExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\AssertExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\ByteArrayExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\CollectionExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\DictionaryExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\EnumerableExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\IntExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\ITranslatorExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Extensions\StringExtensions.cs">
+    <Compile Include="IntExtensions.cs" />
+    <Compile Include="Reflection\DelegateFactory.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="HostContext.cs" />
-    <Compile Include="IntExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="IPAddressExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -182,7 +152,7 @@
     <Compile Include="Messaging\InMemoryTransientMessageService.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Messaging\MessageExtensions.cs">
+    <Compile Include="MessageExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Messaging\MessageHandler.cs">
@@ -212,25 +182,12 @@
     <Compile Include="Messaging\TransientMessageServiceBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\RouteMember.cs" />
-    <Compile Include="ServiceModel\MetadataTypes.cs" />
-    <Compile Include="Model.cs">
+    <Compile Include="Clients\RouteMember.cs" />
+    <Compile Include="MetadataTypes.cs" />
+    <Compile Include="Utils\ModelUtils.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ModelConfig.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Net30\ConcurrentDictionary.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Net30\ConcurrentQueue.cs" />
-    <Compile Include="Net30\ObjectPool.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Net30\SplitOrderedList.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Net30\Tuple.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -243,125 +200,116 @@
     <Compile Include="Reflection\StaticAccessors.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\AsyncServiceClient.cs">
+    <Compile Include="Clients\AsyncServiceClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\AuthDtos.cs">
+    <Compile Include="AuthDtos.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\DictionaryExtensions.cs">
+    <Compile Include="Clients\GenericProxy.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\GenericProxy.cs">
+    <Compile Include="Clients\HttpMethod.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\HttpMethod.cs">
+    <Compile Include="Clients\IDuplex.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\IDuplex.cs">
+    <Compile Include="Clients\IDuplexCallback.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\IDuplexCallback.cs">
+    <Compile Include="Clients\IOneWay.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\IOneWay.cs">
+    <Compile Include="Clients\ISyncReply.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\ISyncReply.cs">
+    <Compile Include="Clients\IWcfServiceClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\IWcfServiceClient.cs">
+    <Compile Include="Clients\JsonRestClientAsync.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\JsonRestClientAsync.cs">
+    <Compile Include="Clients\JsonServiceClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\JsonServiceClient.cs">
+    <Compile Include="Clients\JsvRestClientAsync.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\JsvRestClientAsync.cs">
+    <Compile Include="Clients\JsvServiceClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\JsvServiceClient.cs">
+    <Compile Include="Clients\ServiceClientBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\ServiceClientBase.cs">
+    <Compile Include="Clients\Soap11ServiceClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\Soap11ServiceClient.cs">
+    <Compile Include="Clients\Soap12ServiceClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\Soap12ServiceClient.cs">
+    <Compile Include="Serialization\IStringDeserializer.cs" />
+    <Compile Include="Serialization\IStringSerializer.cs" />
+    <Compile Include="Serialization\ITextSerializer.cs" />
+    <Compile Include="UrlExtensions.cs" />
+    <Compile Include="Clients\WcfServiceClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\UrlExtensions.cs" />
-    <Compile Include="ServiceClient.Web\WcfServiceClient.cs">
+    <Compile Include="Utils\WebRequestUtils.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\WebRequestExtensions.cs">
+    <Compile Include="Clients\WebServiceException.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\WebRequestUtils.cs">
+    <Compile Include="Clients\XmlRestClientAsync.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\WebServiceException.cs">
+    <Compile Include="Clients\XmlServiceClient.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\XLinqExtensions.cs">
+    <Compile Include="Serialization\DataContractDeserializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\XmlRestClientAsync.cs">
+    <Compile Include="Serialization\DataContractSerializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceClient.Web\XmlServiceClient.cs">
+    <Compile Include="Serialization\JsonDataContractDeserializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\DictionaryExtensions.cs">
+    <Compile Include="Serialization\JsonDataContractSerializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Serialization\DataContractDeserializer.cs">
+    <Compile Include="Serialization\KeyValueDataContractDeserializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Serialization\DataContractSerializer.cs">
+    <Compile Include="Serialization\StringMapTypeDeserializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Serialization\JsonDataContractDeserializer.cs">
+    <Compile Include="Serialization\XmlSerializableDeserializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Serialization\JsonDataContractSerializer.cs">
+    <Compile Include="Serialization\XmlSerializableSerializer.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Serialization\KeyValueDataContractDeserializer.cs">
+    <Compile Include="Serialization\XmlSerializableWrapper.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Serialization\StringMapTypeDeserializer.cs">
+    <Compile Include="Validation\ValidationError.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Serialization\XmlSerializableDeserializer.cs">
+    <Compile Include="Validation\ValidationErrorField.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Serialization\XmlSerializableSerializer.cs">
+    <Compile Include="Validation\ValidationErrorResult.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ServiceModel\Support\XmlSerializableWrapper.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ServiceModel\Validation\ValidationError.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ServiceModel\Validation\ValidationErrorField.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ServiceModel\Validation\ValidationErrorResult.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="ServiceModel\XLinqExtensions.cs">
+    <Compile Include="XLinqExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="StreamExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="StringExtensions.cs">
+    <Compile Include="PathExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Support\ActionExecHandler.cs">
@@ -382,9 +330,6 @@
     <Compile Include="Support\InMemoryLogFactory.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Support\LogicFacadeBase.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Support\NetDeflateProvider.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -395,9 +340,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Support\Thread.WinRT.cs" />
-    <Compile Include="TypeExtensions.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="UrnId.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -432,7 +374,7 @@
     <Compile Include="Web\CompressionTypes.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Web\ContentType.cs">
+    <Compile Include="Web\ContentFormat.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Web\EndPoint.cs">
@@ -447,7 +389,7 @@
     <Compile Include="Web\HttpMethods.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Web\HttpResponseFilter.cs">
+    <Compile Include="Web\ContentTypes.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Web\HttpResponseStreamWrapper.cs">
@@ -456,15 +398,11 @@
     <Compile Include="Web\HttpResult.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Web\HttpResultExtensions.cs" />
-    <Compile Include="Web\MimeTypes.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="HttpResultExtensions.cs" />
     <Compile Include="RequestContextExtensions.cs" />
     <Compile Include="Web\SerializationContext.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Extensions\CustomExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ServiceStack.Interfaces\ServiceStack.Interfaces.csproj">
@@ -489,9 +427,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

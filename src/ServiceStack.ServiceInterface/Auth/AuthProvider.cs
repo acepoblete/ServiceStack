@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
 using ServiceStack.Configuration;
 using ServiceStack.Logging;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Web;
 
 namespace ServiceStack.ServiceInterface.Auth
 {
@@ -24,7 +24,7 @@ namespace ServiceStack.ServiceInterface.Auth
 
         protected AuthProvider() { }
 
-        protected AuthProvider(IResourceManager appSettings, string authRealm, string oAuthProvider)
+        protected AuthProvider(IAppSettings appSettings, string authRealm, string oAuthProvider)
         {
             // Enhancement per https://github.com/ServiceStack/ServiceStack/issues/741
             this.AuthRealm = appSettings != null ? appSettings.Get("OAuthRealm", authRealm) : authRealm;
@@ -32,10 +32,25 @@ namespace ServiceStack.ServiceInterface.Auth
             this.Provider = oAuthProvider;
             if (appSettings != null)
             {
-                this.CallbackUrl = appSettings.GetString("oauth.{0}.CallbackUrl".Fmt(oAuthProvider));
-                this.RedirectUrl = appSettings.GetString("oauth.{0}.RedirectUrl".Fmt(oAuthProvider));
+                this.CallbackUrl = appSettings.GetString("oauth.{0}.CallbackUrl".Fmt(oAuthProvider))
+                    ?? FallbackConfig(appSettings.GetString("oauth.CallbackUrl"));
+                this.RedirectUrl = appSettings.GetString("oauth.{0}.RedirectUrl".Fmt(oAuthProvider))
+                    ?? FallbackConfig(appSettings.GetString("oauth.RedirectUrl"));
             }
             this.SessionExpiry = DefaultSessionExpiry;
+        }
+
+        /// <summary>
+        /// Allows specifying a global fallback config that if exists is formatted with the Provider as the first arg.
+        /// E.g. this appSetting with the TwitterAuthProvider: 
+        /// oauth.CallbackUrl="http://localhost:11001/auth/{0}"
+        /// Would result in: 
+        /// oauth.CallbackUrl="http://localhost:11001/auth/twitter"
+        /// </summary>
+        /// <returns></returns>
+        protected string FallbackConfig(string fallback)
+        {
+            return fallback != null ? fallback.Fmt(Provider) : null;
         }
 
         /// <summary>
@@ -44,7 +59,7 @@ namespace ServiceStack.ServiceInterface.Auth
         /// <param name="service"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        public virtual object Logout(IServiceBase service, Auth request)
+        public virtual object Logout(IServiceBase service, Authenticate request)
         {
             var session = service.GetSession();
             var referrerUrl = (request != null ? request.Continue : null)
@@ -56,10 +71,10 @@ namespace ServiceStack.ServiceInterface.Auth
 
             service.RemoveSession();
 
-            if (service.RequestContext.ResponseContentType == ContentType.Html && !String.IsNullOrEmpty(referrerUrl))
+            if (service.RequestContext.ResponseContentType == MimeTypes.Html && !String.IsNullOrEmpty(referrerUrl))
                 return service.Redirect(referrerUrl.AddHashParam("s", "-1"));
 
-            return new AuthResponse();
+            return new AuthenticateResponse();
         }
 
         /// <summary>
@@ -78,7 +93,7 @@ namespace ServiceStack.ServiceInterface.Auth
 
             foreach (var oAuthToken in session.ProviderOAuthAccess)
             {
-                var authProvider = AuthService.GetAuthProvider(oAuthToken.Provider);
+                var authProvider = AuthenticateService.GetAuthProvider(oAuthToken.Provider);
                 if (authProvider == null) continue;
                 var userAuthProvider = authProvider as OAuthProvider;
                 if (userAuthProvider != null)
@@ -121,7 +136,7 @@ namespace ServiceStack.ServiceInterface.Auth
 
                 foreach (var oAuthToken in session.ProviderOAuthAccess)
                 {
-                    var authProvider = AuthService.GetAuthProvider(oAuthToken.Provider);
+                    var authProvider = AuthenticateService.GetAuthProvider(oAuthToken.Provider);
                     if (authProvider == null) continue;
                     var userAuthProvider = authProvider as OAuthProvider;
                     if (userAuthProvider != null)
@@ -162,15 +177,15 @@ namespace ServiceStack.ServiceInterface.Auth
             return true;
         }
 
-        public abstract bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Auth request = null);
+        public abstract bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Authenticate request = null);
 
-        public abstract object Authenticate(IServiceBase authService, IAuthSession session, Auth request);
+        public abstract object Authenticate(IServiceBase authService, IAuthSession session, Authenticate request);
 
         public virtual void OnFailedAuthentication(IAuthSession session, IHttpRequest httpReq, IHttpResponse httpRes)
         {
             httpRes.StatusCode = (int)HttpStatusCode.Unauthorized;
             httpRes.AddHeader(HttpHeaders.WwwAuthenticate, "{0} realm=\"{1}\"".Fmt(this.Provider, this.AuthRealm));
-            httpRes.EndServiceStackRequest();
+            httpRes.EndRequest();
         }
 
         public static void HandleFailedAuth(IAuthProvider authProvider,
@@ -187,7 +202,7 @@ namespace ServiceStack.ServiceInterface.Auth
             httpRes.AddHeader(HttpHeaders.WwwAuthenticate, "{0} realm=\"{1}\""
                 .Fmt(authProvider.Provider, authProvider.AuthRealm));
 
-            httpRes.EndServiceStackRequest();
+            httpRes.EndRequest();
         }
     }
 

@@ -1,6 +1,5 @@
 ﻿using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface;
-using ServiceStack.ServiceInterface.ServiceModel;
 using ServiceStack.WebHost.IntegrationTests.Tests;
 
 namespace ServiceStack.WebHost.IntegrationTests.Services
@@ -17,9 +16,9 @@ namespace ServiceStack.WebHost.IntegrationTests.Services
 	}
 
 	[RequiredRole(ManageRolesTests.ContentManager)]
-	public class ContentManagerOnlyService : ServiceBase<ContentManagerOnly>
+	public class ContentManagerOnlyService : ServiceInterface.Service
 	{
-		protected override object Run(ContentManagerOnly request)
+        public object Any(ContentManagerOnly request)
 		{
 			return new ContentManagerOnlyResponse { Result = "Haz Access" };
 		}
@@ -37,9 +36,9 @@ namespace ServiceStack.WebHost.IntegrationTests.Services
 	}
 
 	[RequiredPermission(ManageRolesTests.ContentPermission)]
-	public class ContentPermissionOnlyService : ServiceBase<ContentPermissionOnly>
+	public class ContentPermissionOnlyService : ServiceInterface.Service
 	{
-		protected override object Run(ContentPermissionOnly request)
+        public object Any(ContentPermissionOnly request)
 		{
 			return new ContentPermissionOnlyResponse { Result = "Haz Access" };
 		}

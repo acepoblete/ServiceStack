@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.Serialization;
+using ServiceStack.Server;
 
 namespace ServiceStack.ServiceHost.Tests.Support
 {
@@ -13,16 +14,11 @@ namespace ServiceStack.ServiceHost.Tests.Support
 		public string MethodName { get; set; }
 	}
 
-	public class RestTestService
-		: IService<RestTest>
-		, IRestGetService<RestTest>
-		, IRestPutService<RestTest>
-		, IRestPostService<RestTest>
-		, IRestDeleteService<RestTest>
+	public class RestTestService : IService
 	{
-		public object Execute(RestTest request)
+		public object Any(RestTest request)
 		{
-			return new RestTestResponse { MethodName = "Execute" };
+			return new RestTestResponse { MethodName = "Any" };
 		}
 
 		public object Get(RestTest request)

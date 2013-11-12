@@ -7,19 +7,21 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Threading;
 using NUnit.Framework;
+using ServiceStack;
+using ServiceStack.Clients;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
+using ServiceStack.Data;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
 using ServiceStack.OrmLite;
 using ServiceStack.Plugins.MsgPack;
-using ServiceStack.Service;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Server;
+using ServiceStack.Clients;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface;
 using ServiceStack.ServiceInterface.Cors;
-using ServiceStack.ServiceInterface.ServiceModel;
 using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
 
 namespace RazorRockstars.Console.Files
@@ -203,7 +205,7 @@ namespace RazorRockstars.Console.Files
             if (!request.Age.HasValue)
                 throw new ArgumentException("Age is required");
 
-            Db.Insert(request.TranslateTo<Reqstar>());
+            Db.Insert(request.ConvertTo<Reqstar>());
             return Db.Select<Reqstar>();
         }
 
@@ -581,7 +583,7 @@ namespace RazorRockstars.Console.Files
         [Test]
         public void Can_GET_AllReqstars_View()
         {
-            var html = "{0}/reqstars".Fmt(Host).GetStringFromUrl(acceptContentType: "text/html");
+            var html = "{0}/reqstars".Fmt(Host).GetStringFromUrl(accept: "text/html");
             html.Print();
             Assert.That(html, Is.StringContaining("<!--view:AllReqstars.cshtml-->"));
             Assert.That(html, Is.StringContaining("<!--template:HtmlReport.cshtml-->"));
@@ -713,7 +715,7 @@ namespace RazorRockstars.Console.Files
         [Test]
         public void Can_GET_GetReqstar_View()
         {
-            var html = "{0}/reqstars/1".Fmt(Host).GetStringFromUrl(acceptContentType: "text/html");
+            var html = "{0}/reqstars/1".Fmt(Host).GetStringFromUrl(accept: "text/html");
             html.Print();
             Assert.That(html, Is.StringContaining("<!--view:GetReqstar.cshtml-->"));
             Assert.That(html, Is.StringContaining("<!--template:HtmlReport.cshtml-->"));
@@ -868,7 +870,7 @@ namespace RazorRockstars.Console.Files
 
             var format = ((ServiceClientBase)client).Format;
             Assert.That(request.ToUrl("GET", format), Is.EqualTo(
-                "/{0}/syncreply/RoutelessReqstar?id=1&firstName=Foo&lastName=Bar".Fmt(format)));
+                "/{0}/reply/RoutelessReqstar?id=1&firstName=Foo&lastName=Bar".Fmt(format)));
             Assert.That(response.Id, Is.EqualTo(request.Id));
             Assert.That(response.FirstName, Is.EqualTo(request.FirstName));
             Assert.That(response.LastName, Is.EqualTo(request.LastName));
@@ -887,7 +889,7 @@ namespace RazorRockstars.Console.Files
 
             var format = ((ServiceClientBase)client).Format;
             Assert.That(request.ToUrl("POST", format), Is.EqualTo(
-                "/{0}/syncreply/RoutelessReqstar".Fmt(format)));
+                "/{0}/reply/RoutelessReqstar".Fmt(format)));
             Assert.That(response.Id, Is.EqualTo(request.Id));
             Assert.That(response.FirstName, Is.EqualTo(request.FirstName));
             Assert.That(response.LastName, Is.EqualTo(request.LastName));
@@ -940,6 +942,19 @@ namespace RazorRockstars.Console.Files
             Assert.That(response4.Name, Is.EqualTo("foo"));
             response4 = "{0}/ignorewildcard/a/b?Name=foo".Fmt(Host).GetJsonFromUrl().FromJson<IgnoreWildcardRoute>();
             Assert.That(response4.Name, Is.EqualTo("foo"));
+        }
+
+        [Test]
+        public void Does_handle_ignored_routes()
+        {
+            var restPath = new RestPath(typeof(IgnoreRoute3), "/ignore/{ignore}/with/{name}");
+            var pathComponents = RestPath.GetPathPartsForMatching("/ignore/AnyThing/with/foo");
+            var score = restPath.MatchScore("GET", pathComponents);
+
+            Assert.That(score, Is.GreaterThan(0));
+
+            var request = (IgnoreRoute3) restPath.CreateRequest("/ignore/AnyThing/with/foo");
+            Assert.That(request.Name, Is.EqualTo("foo"));
         }
     }
     

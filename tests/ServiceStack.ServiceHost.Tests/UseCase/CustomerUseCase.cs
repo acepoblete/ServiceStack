@@ -4,8 +4,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using Funq;
 using NUnit.Framework;
-using ServiceStack.CacheAccess;
-using ServiceStack.CacheAccess.Providers;
+using ServiceStack.Caching;
 using ServiceStack.Configuration;
 using ServiceStack.OrmLite;
 using ServiceStack.OrmLite.Sqlite;
@@ -123,8 +122,8 @@ namespace ServiceStack.ServiceHost.Tests.UseCase
 
 		private static void RegisterServices(ServiceController serviceController, ITypeFactory typeFactory)
 		{
-			serviceController.RegisterGServiceExecutor(typeof(StoreCustomers), typeof(StoreCustomersService), typeFactory);
-			serviceController.RegisterGServiceExecutor(typeof(GetCustomer), typeof(GetCustomerService), typeFactory);
+			serviceController.RegisterNServiceExecutor(typeof(StoreCustomers), typeof(StoreCustomersService), typeFactory);
+			serviceController.RegisterNServiceExecutor(typeof(GetCustomer), typeof(GetCustomerService), typeFactory);
 		}
 
 		public static ITypeFactory GetNativeFunqTypeFactory()

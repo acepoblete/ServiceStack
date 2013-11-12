@@ -10,18 +10,16 @@ using System.Web;
 using System.Web.Configuration;
 using System.Xml.Linq;
 using MarkdownSharp;
-using ServiceStack.Common.ServiceModel;
-using ServiceStack.Common.Utils;
-using ServiceStack.Common.Web;
+using ServiceStack.Common;
 using ServiceStack.Configuration;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
 using ServiceStack.Markdown;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface;
-using ServiceStack.ServiceModel;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Utils;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints.Support;
 
 namespace ServiceStack.WebHost.Endpoints
@@ -50,8 +48,7 @@ namespace ServiceStack.WebHost.Endpoints
                 {
                     instance = new EndpointHostConfig
                     {
-                        MetadataTypesConfig = new MetadataTypesConfig(
-                            addDefaultXmlNamespace: "http://schemas.servicestack.net/types"),
+                        MetadataTypesConfig = new MetadataTypesConfig(addDefaultXmlNamespace: "http://schemas.servicestack.net/types"),
                         WsdlServiceNamespace = "http://schemas.servicestack.net/types",
                         WsdlSoapActionNamespace = "http://schemas.servicestack.net/types",
                         MetadataPageBodyHtml = @"<br />
@@ -105,7 +102,7 @@ namespace ServiceStack.WebHost.Endpoints
 							{ "image/png", TimeSpan.FromHours(1) },
 							{ "image/jpeg", TimeSpan.FromHours(1) },
 						},
-                        AppendUtf8CharsetOnContentTypes = new HashSet<string> { ContentType.Json, },
+                        AppendUtf8CharsetOnContentTypes = new HashSet<string> { MimeTypes.Json, },
                         RawHttpHandlers = new List<Func<IHttpRequest, IHttpHandler>>(),
                         RouteNamingConventions = new List<RouteNamingConventionDelegate> {
 					        RouteNamingConvention.WithRequestDtoName,
@@ -121,8 +118,9 @@ namespace ServiceStack.WebHost.Endpoints
                         MetadataVisibility = EndpointAttributes.Any,
                         Return204NoContentForEmptyResponse = true,
                         AllowPartialResponses = true,
-                        IgnoreWarningsOnPropertyNames = new List<string>() {
-                            "format", "callback", "debug", "_"
+                        AllowAclUrlReservation = true,
+                        IgnoreWarningsOnPropertyNames = new List<string> {
+                            "format", "callback", "debug", "_", "authsecret"
                         }
                     };
 
@@ -140,6 +138,7 @@ namespace ServiceStack.WebHost.Endpoints
         {
             this.ServiceName = serviceName;
             this.ServiceManager = serviceManager;
+
         }
 
         public EndpointHostConfig()
@@ -196,6 +195,8 @@ namespace ServiceStack.WebHost.Endpoints
             this.PreExecuteServiceFilter = instance.PreExecuteServiceFilter;
             this.PostExecuteServiceFilter = instance.PostExecuteServiceFilter;
             this.FallbackRestPath = instance.FallbackRestPath;
+            this.AllowAclUrlReservation = instance.AllowAclUrlReservation;
+            this.AdminAuthSecret = instance.AdminAuthSecret;
         }
 
         public static string GetAppConfigPath()
@@ -324,7 +325,7 @@ namespace ServiceStack.WebHost.Endpoints
                 if (webServerSection != null)
                 {
                     var rawXml = webServerSection.SectionInformation.GetRawXml();
-                    if (!string.IsNullOrEmpty(rawXml))
+                    if (!String.IsNullOrEmpty(rawXml))
                     {
                         SetPaths(ExtractHandlerPathFromWebServerConfigurationXml(rawXml), locationPath);
                     }
@@ -353,7 +354,7 @@ namespace ServiceStack.WebHost.Endpoints
             }
 
             instance.ServiceStackHandlerFactoryPath = locationPath ??
-                (string.IsNullOrEmpty(handlerPath) ? null : handlerPath);
+                (String.IsNullOrEmpty(handlerPath) ? null : handlerPath);
 
             instance.MetadataRedirectPath = PathUtils.CombinePaths(
                 null != locationPath ? instance.ServiceStackHandlerFactoryPath : handlerPath
@@ -371,11 +372,11 @@ namespace ServiceStack.WebHost.Endpoints
 
         private static string EnsureHandlerTypeAttribute(XElement handler)
         {
-          if (handler.Attribute("type") != null && !string.IsNullOrEmpty(handler.Attribute("type").Value))
-          {
-            return handler.Attribute("type").Value;
-          }
-          return string.Empty;
+            if (handler.Attribute("type") != null && !String.IsNullOrEmpty(handler.Attribute("type").Value))
+            {
+                return handler.Attribute("type").Value;
+            }
+            return String.Empty;
         }
 
         public ServiceManager ServiceManager { get; internal set; }
@@ -399,6 +400,7 @@ namespace ServiceStack.WebHost.Endpoints
         public bool UseCustomMetadataTemplates { get; set; }
 
         public string ServiceName { get; set; }
+        public string SoapServiceName { get; set; }
         public string DefaultContentType { get; set; }
         public bool AllowJsonpRequests { get; set; }
         public bool AllowRouteContentTypeExtensions { get; set; }
@@ -452,10 +454,12 @@ namespace ServiceStack.WebHost.Endpoints
         public TimeSpan DefaultJsonpCacheExpiration { get; set; }
         public bool Return204NoContentForEmptyResponse { get; set; }
         public bool AllowPartialResponses { get; set; }
-
         public bool AllowNonHttpOnlyCookies { get; set; }
+        public bool AllowAclUrlReservation { get; set; }
 
         public bool UseHttpsLinks { get; set; }
+
+        public string AdminAuthSecret { get; set; }
 
         private string defaultOperationNamespace;
         public string DefaultOperationNamespace
@@ -522,10 +526,9 @@ namespace ServiceStack.WebHost.Endpoints
         {
             if (EndpointHost.Config.EnableFeatures == Feature.All) return;
 
-            var contentTypeFeature = ContentType.ToFeature(contentType);
-            AssertFeatures(contentTypeFeature);
+            AssertFeatures(contentType.ToFeature());
         }
-        
+
         public MetadataPagesConfig MetadataPagesConfig
         {
             get
@@ -534,7 +537,7 @@ namespace ServiceStack.WebHost.Endpoints
                     Metadata,
                     ServiceEndpointsMetadataConfig,
                     IgnoreFormatsInMetadata,
-                    EndpointHost.ContentTypeFilter.ContentTypeFormats.Keys.ToList());
+                    EndpointHost.ContentTypes.ContentTypeFormats.Keys.ToList());
             }
         }
 
@@ -558,7 +561,7 @@ namespace ServiceStack.WebHost.Endpoints
             return true;
         }
 
-        public void HandleErrorResponse(IHttpRequest httpReq, IHttpResponse httpRes, HttpStatusCode errorStatus, string errorStatusDescription=null)
+        public void HandleErrorResponse(IHttpRequest httpReq, IHttpResponse httpRes, HttpStatusCode errorStatus, string errorStatusDescription = null)
         {
             if (httpRes.IsClosed) return;
 
@@ -593,7 +596,7 @@ namespace ServiceStack.WebHost.Endpoints
         {
             try
             {
-                return GetCustomErrorHandler((HttpStatusCode) errorStatusCode);
+                return GetCustomErrorHandler((HttpStatusCode)errorStatusCode);
             }
             catch
             {
@@ -624,6 +627,17 @@ namespace ServiceStack.WebHost.Endpoints
         public Action<object, IHttpRequest, IHttpResponse> PostExecuteServiceFilter { get; set; }
 
         public FallbackRestPathDelegate FallbackRestPath { get; set; }
+
+        public bool HasValidAuthSecret(IHttpRequest req)
+        {
+            if (AdminAuthSecret != null)
+            {
+                var authSecret = req.GetParam("authsecret");
+                return authSecret == EndpointHost.Config.AdminAuthSecret;
+            }
+
+            return false;
+        }
     }
 
 }

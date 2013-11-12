@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.Serialization;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface;
 
@@ -25,12 +26,11 @@ namespace ServiceStack.WebHost.IntegrationTests.Services
 		public string Value { get; set; }
 	}
 
-	public class StatusCodeService
-		: ServiceBase<RequestFilter>, IRequiresRequestContext
+	public class StatusCodeService : ServiceInterface.Service, IRequiresRequestContext
 	{
 		new public IRequestContext RequestContext { get; set; }
 
-		protected override object Run(RequestFilter request)
+        public object Any(RequestFilter request)
 		{
 			return new RequestFilterResponse();
 		}

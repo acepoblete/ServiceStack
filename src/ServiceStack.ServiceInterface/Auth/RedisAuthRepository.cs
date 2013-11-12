@@ -24,21 +24,28 @@ namespace ServiceStack.ServiceInterface.Auth
             this.factory = factory;
         }
 
+        public string NamespacePrefix { get; set; }
+
+        private string UsePrefix
+        {
+            get { return NamespacePrefix ?? ""; }
+        }
+
         private string IndexUserAuthAndProviderIdsSet(long userAuthId)
         {
-            return "urn:UserAuth>UserOAuthProvider:" + userAuthId;
+            return UsePrefix + "urn:UserAuth>UserOAuthProvider:" + userAuthId;
         }
 
         private string IndexProviderToUserIdHash(string provider)
         {
-            return "hash:ProviderUserId>OAuthProviderId:" + provider;
+            return UsePrefix + "hash:ProviderUserId>OAuthProviderId:" + provider;
         }
 
         private string IndexUserNameToUserId
         {
             get
             {
-                return "hash:UserAuth:UserName>UserId";
+                return UsePrefix + "hash:UserAuth:UserName>UserId";
             }
         }
 
@@ -46,7 +53,7 @@ namespace ServiceStack.ServiceInterface.Auth
         {
             get
             {
-                return "hash:UserAuth:Email>UserId";
+                return UsePrefix + "hash:UserAuth:Email>UserId";
             }
         }
 
@@ -252,7 +259,7 @@ namespace ServiceStack.ServiceInterface.Auth
             {
                 var userAuth = !authSession.UserAuthId.IsNullOrEmpty()
                     ? GetUserAuth(redis, authSession.UserAuthId)
-                    : authSession.TranslateTo<UserAuth>();
+                    : authSession.ConvertTo<UserAuth>();
 
                 if (userAuth.Id == default(int) && !authSession.UserAuthId.IsNullOrEmpty())
                     userAuth.Id = int.Parse(authSession.UserAuthId);

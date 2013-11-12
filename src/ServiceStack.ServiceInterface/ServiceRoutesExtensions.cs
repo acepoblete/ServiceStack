@@ -4,10 +4,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using ServiceStack.Common;
-using ServiceStack.Common.Utils;
-using ServiceStack.Common.Web;
+using ServiceStack.Server;
 using ServiceStack.Text;
 using ServiceStack.ServiceHost;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
 
 namespace ServiceStack.ServiceInterface
@@ -28,7 +28,6 @@ namespace ServiceStack.ServiceInterface
         {
             foreach (Assembly assembly in assembliesWithServices)
             {
-                AddOldApiRoutes(routes, assembly);
                 AddNewApiRoutes(routes, assembly);
             }
 
@@ -63,62 +62,6 @@ namespace ServiceStack.ServiceInterface
 
                     routes.AddRoute(requestType, allowedVerbs);
                 }
-            }
-        }
-
-        private static void AddOldApiRoutes(IServiceRoutes routes, Assembly assembly)
-        {
-            var services = assembly.GetExportedTypes()
-                .Where(t => !t.IsAbstract
-                            && t.IsSubclassOfRawGeneric(typeof(ServiceBase<>)));
-
-            foreach (Type service in services)
-            {
-                Type baseType = service.BaseType;
-                //go up the hierarchy to the first generic base type
-                while (!baseType.IsGenericType)
-                {
-                    baseType = baseType.BaseType;
-                }
-
-                Type requestType = baseType.GetGenericArguments()[0];
-
-                string allowedVerbs = null; //null == All Routes
-
-                if (service.IsSubclassOfRawGeneric(typeof(RestServiceBase<>)))
-                {
-                    //find overriden REST methods
-                    var allowedMethods = new List<string>();
-                    if (service.GetMethod("OnGet").DeclaringType == service)
-                    {
-                        allowedMethods.Add(HttpMethods.Get);
-                    }
-
-                    if (service.GetMethod("OnPost").DeclaringType == service)
-                    {
-                        allowedMethods.Add(HttpMethods.Post);
-                    }
-
-                    if (service.GetMethod("OnPut").DeclaringType == service)
-                    {
-                        allowedMethods.Add(HttpMethods.Put);
-                    }
-
-                    if (service.GetMethod("OnDelete").DeclaringType == service)
-                    {
-                        allowedMethods.Add(HttpMethods.Delete);
-                    }
-
-                    if (service.GetMethod("OnPatch").DeclaringType == service)
-                    {
-                        allowedMethods.Add(HttpMethods.Patch);
-                    }
-
-                    if (allowedMethods.Count == 0) continue;
-                    allowedVerbs = string.Join(" ", allowedMethods.ToArray());
-                }
-
-                routes.AddRoute(requestType, allowedVerbs);
             }
         }
 
@@ -177,9 +120,9 @@ namespace ServiceStack.ServiceInterface
             return (lambdaExpression.Body is UnaryExpression ? (MemberExpression)((UnaryExpression)lambdaExpression.Body).Operand : (MemberExpression)lambdaExpression.Body).Member.Name;
         }
 
-        public static void Add<T>(this IServiceRoutes serviceRoutes, string restPath, ApplyTo verbs, params Expression<Func<T, object>>[] propertyExpressions)
+        public static IServiceRoutes Add<T>(this IServiceRoutes serviceRoutes, string restPath, ApplyTo verbs, params Expression<Func<T, object>>[] propertyExpressions)
         {
-            serviceRoutes.Add<T>(FormatRoute(restPath, propertyExpressions), verbs);
+            return serviceRoutes.Add<T>(FormatRoute(restPath, propertyExpressions), verbs);
         }
     }
 }

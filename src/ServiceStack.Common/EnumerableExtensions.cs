@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+
 #if WINDOWS_PHONE
 using ServiceStack.Text.WP;
 #endif
 
-namespace ServiceStack.Common
+namespace ServiceStack
 {
     public static class EnumerableExtensions
     {
@@ -18,9 +19,95 @@ namespace ServiceStack.Common
             return new HashSet<T>(items);
         }
 
+        /// <summary>
+        /// Alias for SafeForEach
+        /// </summary>
+        public static void Each<T>(this IEnumerable<T> values, Action<T> action)
+        {
+            SafeForEach(values, action);
+        }
+
+        public static void SafeForEach<T>(this IEnumerable<T> values, Action<T> action)
+        {
+            if (values == null) return;
+
+            foreach (var value in values)
+            {
+                action(value);
+            }
+        }
+
+        /// <summary>
+        /// Alias for SafeForEach
+        /// </summary>
+        public static void Each<T>(this IEnumerable<T> values, Action<int, T> action)
+        {
+            SafeForEach(values, action);
+        }
+
+        public static void SafeForEach<T>(this IEnumerable<T> values, Action<int,T> action)
+        {
+            if (values == null) return;
+
+            var i = 0;
+            foreach (var value in values)
+            {
+                action(i++, value);
+            }
+        }
+
+        /// <summary>
+        /// Alias for SafeConvertAll
+        /// </summary>
+        public static List<To> Map<To, From>(this IEnumerable<From> items, Func<From, To> converter)
+        {
+            return SafeConvertAll(items, converter);
+        }
+
         public static List<To> SafeConvertAll<To, From>(this IEnumerable<From> items, Func<From, To> converter)
         {
-            return items == null ? new List<To>() : Extensions.EnumerableExtensions.ConvertAll(items, converter);
+            if (items == null)
+                return new List<To>();
+
+            var list = new List<To>();
+            foreach (var item in items)
+            {
+                list.Add(converter(item));
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Alias for SafeConvertAll
+        /// </summary>
+        public static List<To> Map<To>(this System.Collections.IEnumerable items, Func<object, To> converter)
+        {
+            return SafeConvertAll(items, converter);
+        }
+
+        public static List<To> SafeConvertAll<To>(this System.Collections.IEnumerable items, Func<object, To> converter)
+        {
+            if (items == null)
+                return new List<To>();
+
+            var list = new List<To>();
+            foreach (var item in items)
+            {
+                list.Add(converter(item));
+            }
+            return list;
+        }
+
+        public static object SafeFirst(this System.Collections.IEnumerable items)
+        {
+            if (items == null)
+                return null;
+
+            foreach (var item in items)
+            {
+                return item;
+            }
+            return null;
         }
 
         public static List<object> ToObjects<T>(this IEnumerable<T> items)

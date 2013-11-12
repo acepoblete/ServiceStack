@@ -35,7 +35,8 @@ using System.Text;
 using System.Net;
 using System.Web;
 using System.Security.Cryptography;
-using ServiceStack.ServiceModel;
+using ServiceStack.Common;
+using ServiceStack.Text;
 
 namespace ServiceStack.ServiceInterface.Auth
 {
@@ -153,7 +154,6 @@ namespace ServiceStack.ServiceInterface.Auth
                     signatureHeaders.Add(key, OAuthUtils.PercentEncode(nvc[key]));
             }
 
-          
             string signature = MakeSignature("POST", uri.GetLeftPart(UriPartial.Path), signatureHeaders);
             string compositeSigningKey = MakeSigningKey(provider.ConsumerSecret, null);
             string oauth_signature = MakeOAuthSignature(compositeSigningKey, signature);
@@ -177,6 +177,8 @@ namespace ServiceStack.ServiceInterface.Auth
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                string responseBody = e.GetResponseBody();
+                responseBody.Print();
                 // fallthrough for errors
             }
             return false;

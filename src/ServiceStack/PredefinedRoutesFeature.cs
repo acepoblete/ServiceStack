@@ -1,5 +1,6 @@
 ﻿using System.Web;
 using ServiceStack.ServiceHost;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
 
 namespace ServiceStack
@@ -33,8 +34,8 @@ namespace ServiceStack
 
             var pathAction = string.Intern(pathParts[1].ToLower());
             var requestName = pathParts.Length > 2 ? pathParts[2] : null;
-            var isReply = pathAction == "syncreply" || pathAction == "reply";
-            var isOneWay = pathAction == "asynconeway" || pathAction == "oneway";
+            var isReply = pathAction == "reply";
+            var isOneWay = pathAction == "oneway";
             switch (pathController)
             {
                 case "json":
@@ -60,9 +61,9 @@ namespace ServiceStack
 
                 default:
                     string contentType;
-                    if (EndpointHost.ContentTypeFilter.ContentTypeFormats.TryGetValue(pathController, out contentType))
+                    if (EndpointHost.ContentTypes.ContentTypeFormats.TryGetValue(pathController, out contentType))
                     {
-                        var feature = Common.Web.ContentType.ToFeature(contentType);
+                        var feature = ContentFormat.ToFeature(contentType);
                         if (feature == Feature.None) feature = Feature.CustomFormat;
 
                         if (isReply)

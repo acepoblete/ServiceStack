@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
-using ServiceStack.Common.Web;
-using ServiceStack.ServiceModel;
+using ServiceStack.Common;
+using ServiceStack.Server;
 using ServiceStack.Text;
+using ServiceStack.Web;
 
 namespace ServiceStack.ServiceHost
 {

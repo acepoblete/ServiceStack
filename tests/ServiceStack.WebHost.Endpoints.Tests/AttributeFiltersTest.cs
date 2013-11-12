@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
 using System.Linq;
-using System.Text;
+using ServiceStack.Caching;
+using ServiceStack.Clients;
+using ServiceStack.Common;
 using ServiceStack.Common.Tests.ServiceClient.Web;
-using ServiceStack.Common.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using NUnit.Framework;
-using ServiceStack.ServiceClient.Web;
-using ServiceStack.Service;
+using ServiceStack.Clients;
 using ServiceStack.ServiceInterface;
-using ServiceStack.CacheAccess;
-using ServiceStack.CacheAccess.Providers;
-using ServiceStack.ServiceInterface.ServiceModel;
 using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints.Utils;
 
@@ -90,7 +86,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 
         public void ResponseFilter(IHttpRequest req, IHttpResponse res, object response)
         {
-            var dto = response.ToResponseDto() as AttributeFilteredResponse;
+            var dto = response.GetResponseDto() as AttributeFilteredResponse;
             dto.ResponseFilterExecuted = true;
             dto.ResponseFilterDependencyIsResolved = Cache != null && !Cache.Equals(previousCache);
 
@@ -154,9 +150,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests
         public bool ResponseFilterDependencyIsResolved { get; set; }
     }
 
-    public class AttributeFilteredService : IService<AttributeFiltered>
+    public class AttributeFilteredService : IService
     {
-        public object Execute(AttributeFiltered request)
+        public object Any(AttributeFiltered request)
         {
             return new AttributeFilteredResponse() {
                 ResponseFilterExecuted = false,

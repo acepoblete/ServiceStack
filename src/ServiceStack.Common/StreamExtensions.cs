@@ -2,12 +2,12 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using ServiceStack.CacheAccess;
-using ServiceStack.Common.Support;
-using ServiceStack.Common.Web;
+using ServiceStack.Caching;
+using ServiceStack.Support;
 using ServiceStack.Text;
+using ServiceStack.Web;
 
-namespace ServiceStack.Common
+namespace ServiceStack
 {
     public static class StreamExtensions
     {

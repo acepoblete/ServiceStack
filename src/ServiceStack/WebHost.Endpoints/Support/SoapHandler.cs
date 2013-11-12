@@ -2,18 +2,18 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Web;
 using System.Xml;
-using ServiceStack.Common;
-using ServiceStack.Common.Web;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Serialization;
+using ServiceStack.Server;
+using ServiceStack.Clients;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceModel.Serialization;
 using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints.Utils;
-using HttpRequestWrapper = ServiceStack.WebHost.Endpoints.Extensions.HttpRequestWrapper;
-using HttpResponseWrapper = ServiceStack.WebHost.Endpoints.Extensions.HttpResponseWrapper;
+using HttpRequestWrapper = ServiceStack.WebHost.Endpoints.Wrappers.HttpRequestWrapper;
+using HttpResponseWrapper = ServiceStack.WebHost.Endpoints.Wrappers.HttpResponseWrapper;
 
 namespace ServiceStack.WebHost.Endpoints.Support
 {
@@ -91,7 +91,12 @@ namespace ServiceStack.WebHost.Endpoints.Support
 
             try
             {
-                var request = DataContractDeserializer.Instance.Parse(requestXml, requestType);
+                var useXmlSerializerRequest = requestType.HasAttribute<XmlSerializerFormatAttribute>();
+
+                var request = useXmlSerializerRequest
+                                  ? XmlSerializableDeserializer.Instance.Parse(requestXml, requestType)
+                                  : DataContractDeserializer.Instance.Parse(requestXml, requestType);
+                
                 var requiresSoapMessage = request as IRequiresSoapMessage;
                 if (requiresSoapMessage != null)
                 {
@@ -119,6 +124,13 @@ namespace ServiceStack.WebHost.Endpoints.Support
                 if (httpResult != null)
                     response = httpResult.Response;
 
+                var useXmlSerializerResponse = response.GetType().HasAttribute<XmlSerializerFormatAttribute>();
+                
+                if (useXmlSerializerResponse)
+                    return requestMsg.Headers.Action == null
+                        ? Message.CreateMessage(requestMsg.Version, null, response, new XmlSerializerWrapper(response.GetType()))
+                        : Message.CreateMessage(requestMsg.Version, requestType.Name + "Response", response, new XmlSerializerWrapper(response.GetType()));
+                
                 return requestMsg.Headers.Action == null
                     ? Message.CreateMessage(requestMsg.Version, null, response)
                     : Message.CreateMessage(requestMsg.Version, requestType.Name + "Response", response);
@@ -239,7 +251,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
             var requestOperationName = GetAction(contentType);
             return requestOperationName != null
                     ? contentType.Replace(requestOperationName, requestOperationName + "Response")
-                    : (this.HandlerAttributes == EndpointAttributes.Soap11 ? ContentType.Soap11 : ContentType.Soap12);
+                    : (this.HandlerAttributes == EndpointAttributes.Soap11 ? MimeTypes.Soap11 : MimeTypes.Soap12);
         }
 
         public override object CreateRequest(IHttpRequest request, string operationName)

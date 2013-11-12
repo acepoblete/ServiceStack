@@ -5,16 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
-using ServiceStack.Common.Utils;
-using ServiceStack.Common.Web;
 using ServiceStack.Html;
 using ServiceStack.IO;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost.Tests.AppData;
 using ServiceStack.ServiceInterface.Testing;
 using ServiceStack.Text;
+using ServiceStack.Utils;
 using ServiceStack.VirtualPath;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
-using ServiceStack.WebHost.Endpoints.Extensions;
 using ServiceStack.WebHost.Endpoints.Formats;
 using ServiceStack.WebHost.Endpoints.Support.Markdown;
 
@@ -52,8 +52,8 @@ namespace ServiceStack.ServiceHost.Tests.Formats
 					HtmlReplaceTokens = new Dictionary<string, string>(),
 					IgnoreFormatsInMetadata = new HashSet<string>(),
 				};
-				this.ContentTypeFilters = HttpResponseFilter.Instance;
-				this.ResponseFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
+				this.ContentTypeses = ContentTypes.Instance;
+				this.GlobalResponseFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
 				this.ViewEngines = new List<IViewEngine>();
 				this.CatchAllHandlers = new List<HttpHandlerResolverDelegate>();
 				this.VirtualPathProvider = new FileSystemVirtualPathProvider(this, "~".MapProjectPath());
@@ -80,13 +80,13 @@ namespace ServiceStack.ServiceHost.Tests.Formats
 				throw new NotImplementedException();
 			}
 
-			public IContentTypeFilter ContentTypeFilters { get; set; }
+			public IContentTypes ContentTypeses { get; set; }
 
             public List<Action<IHttpRequest, IHttpResponse>> PreRequestFilters { get; set; }
 
-			public List<Action<IHttpRequest, IHttpResponse, object>> RequestFilters { get; set; }
+			public List<Action<IHttpRequest, IHttpResponse, object>> GlobalRequestFilters { get; set; }
 
-			public List<Action<IHttpRequest, IHttpResponse, object>> ResponseFilters { get; set; }
+			public List<Action<IHttpRequest, IHttpResponse, object>> GlobalResponseFilters { get; set; }
 
             public List<IViewEngine> ViewEngines { get; set; }
             

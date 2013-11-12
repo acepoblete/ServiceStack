@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using NUnit.Framework;
-using ServiceStack.Common.Web;
-using ServiceStack.ServiceClient.Web;
-using ServiceStack.Text;
+﻿using NUnit.Framework;
+using ServiceStack.Clients;
 
 namespace ServiceStack.WebHost.Endpoints.Tests.IntegrationTests
 {
@@ -19,8 +15,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests.IntegrationTests
         }
 
         [Test]
-        public void Can_list_all_movies(){
-            var response = soapClient.Send<RestMoviesResponse>(new RestMovies());
+        public void Can_list_all_movies()
+        {
+            var response = soapClient.Send<RestMoviesResponse>(new GetRestMovies());
             Assert.That(response.Movies, Has.Count.EqualTo(ConfigureDatabase.Top5Movies.Count));
         }
 

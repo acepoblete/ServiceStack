@@ -3,13 +3,16 @@ using System.Net;
 using System.Web;
 using ServiceStack.Common;
 using ServiceStack.Configuration;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceModel;
 using ServiceStack.Text;
 
 namespace ServiceStack.ServiceInterface.Auth
 {
+    /// <summary>
+    /// Create a Facebook App at: https://developers.facebook.com/apps
+    /// The Callback URL for your app should match the CallbackUrl provided.
+    /// </summary>
     public class FacebookAuthProvider : OAuthProvider
     {
         public const string Name = "facebook";
@@ -20,7 +23,7 @@ namespace ServiceStack.ServiceInterface.Auth
         public string AppSecret { get; set; }
         public string[] Permissions { get; set; }
 
-        public FacebookAuthProvider(IResourceManager appSettings)
+        public FacebookAuthProvider(IAppSettings appSettings)
             : base(appSettings, Realm, Name, "AppId", "AppSecret")
         {
             this.AppId = appSettings.GetString("oauth.facebook.AppId");
@@ -28,7 +31,7 @@ namespace ServiceStack.ServiceInterface.Auth
             this.Permissions = appSettings.Get("oauth.facebook.Permissions", new string[0]);
         }
 
-        public override object Authenticate(IServiceBase authService, IAuthSession session, Auth request)
+        public override object Authenticate(IServiceBase authService, IAuthSession session, Authenticate request)
         {
             var tokens = Init(authService, ref session, request);
 

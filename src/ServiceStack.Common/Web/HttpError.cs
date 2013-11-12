@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface.ServiceModel;
+using ServiceStack.Common;
+using ServiceStack.Server;
 
-namespace ServiceStack.Common.Web
+namespace ServiceStack.Web
 {
     public class HttpError : Exception, IHttpError
     {
@@ -89,7 +89,7 @@ namespace ServiceStack.Common.Web
         {
             get
             {
-                return this.Response.ToResponseStatus();
+                return this.Response.GetResponseStatus();
             }
         }
 

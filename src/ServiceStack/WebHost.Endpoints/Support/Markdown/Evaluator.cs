@@ -1,11 +1,13 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using ServiceStack.Logging;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
 
@@ -48,17 +50,19 @@ namespace ServiceStack.WebHost.Endpoints.Support.Markdown
 	    static readonly List<Assembly> Assemblies = new List<Assembly> {
 			typeof(string).Assembly,       //"system.dll",
 //			typeof(XmlDocument).Assembly,  //"system.xml.dll",
+            typeof(System.Web.HtmlString).Assembly, //"system.web.dll",
 			typeof(Expression).Assembly,   //"system.core.dll",
 			typeof(AppHostBase).Assembly,  //"ServiceStack.dll",
 			typeof(JsConfig).Assembly,     //"ServiceStack.Text.dll",
-			typeof(IService<>).Assembly,   //"ServiceStack.Interfaces.dll",
-			typeof(Common.UrnId).Assembly, //"ServiceStack.Common.dll"
+			typeof(IService).Assembly,   //"ServiceStack.Interfaces.dll",
+			typeof(UrnId).Assembly, //"ServiceStack.Common.dll"
 		};
 
 	    static readonly List<string> AssemblyNames = new List<string> {
 	        "System",
             "System.Text",
 //            "System.Xml",
+            "System.Web",
             "System.Collections",
             "System.Collections.Generic",
             "System.Linq",
@@ -193,7 +197,7 @@ namespace ServiceStack.WebHost.Endpoints.Support.Markdown
 		}
 
 		private static readonly bool IsVersion4AndUp = Type.GetType("System.Collections.Concurrent.Partitioner") != null;
-
+        
 		private static void AddAssembly(CompilerParameters cp, string location)
 		{
 			//Error if trying to re-add ref to mscorlib or System.Core for .NET 4.0
@@ -294,13 +298,9 @@ namespace CSharpEval
 
 			if (IsVersion4AndUp)
 			{
-				//var type = Type.GetType("System.Collections.Concurrent.Partitioner");
-				//if (type != null)
-				//    cp.ReferencedAssemblies.Add(type.Assembly.Location);
 				if (!Env.IsMono)
 				{
-					//cp.ReferencedAssemblies.Add(@"C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.dll");
-					cp.ReferencedAssemblies.Add(@"C:\Program Files\Reference Assemblies\Microsoft\Framework\v3.5\System.Core.dll");
+                    cp.ReferencedAssemblies.Add(Env.ReferenceAssembyPath + @"System.Core.dll");
 				}
 			}
 

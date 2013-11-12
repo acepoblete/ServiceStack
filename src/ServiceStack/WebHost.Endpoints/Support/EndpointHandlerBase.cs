@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Web;
-using ServiceStack.Common.Extensions;
-using ServiceStack.Common.Web;
+using ServiceStack.Common;
 using ServiceStack.Logging;
+using ServiceStack.Serialization;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceModel.Serialization;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
-using HttpRequestExtensions = ServiceStack.WebHost.Endpoints.Extensions.HttpRequestExtensions;
-using HttpRequestWrapper = ServiceStack.WebHost.Endpoints.Extensions.HttpRequestWrapper;
-using HttpResponseWrapper = ServiceStack.WebHost.Endpoints.Extensions.HttpResponseWrapper;
+using ServiceStack.Web;
+using ServiceStack.WebHost.Endpoints.Wrappers;
+using HttpRequestWrapper = ServiceStack.WebHost.Endpoints.Wrappers.HttpRequestWrapper;
+using HttpResponseWrapper = ServiceStack.WebHost.Endpoints.Wrappers.HttpResponseWrapper;
 
 namespace ServiceStack.WebHost.Endpoints.Support
 {
@@ -73,7 +73,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
                 }
             }
 
-            var isFormData = httpReq.HasAnyOfContentTypes(ContentType.FormUrlEncoded, ContentType.MultiPartFormData);
+            var isFormData = httpReq.HasAnyOfContentTypes(MimeTypes.FormUrlEncoded, MimeTypes.MultiPartFormData);
             if (isFormData)
             {
                 try
@@ -96,7 +96,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
             {
                 if (!string.IsNullOrEmpty(contentType) && httpReq.ContentLength > 0)
                 {
-                    var deserializer = EndpointHost.AppHost.ContentTypeFilters.GetStreamDeserializer(contentType);
+                    var deserializer = EndpointHost.AppHost.ContentTypeses.GetStreamDeserializer(contentType);
                     if (deserializer != null)
                     {
                         return deserializer(requestType, httpReq.InputStream);
@@ -233,7 +233,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
             }
             finally
             {
-                httpRes.EndServiceStackRequest(skipHeaders: true);
+                httpRes.EndRequest(skipHeaders: true);
             }
         }
 

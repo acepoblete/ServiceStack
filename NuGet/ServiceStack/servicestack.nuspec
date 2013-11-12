@@ -3,7 +3,7 @@
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>ServiceStack</id>
     <title>ServiceStack webservice framework: Faster, Cleaner, Modern WCF alternative</title>
-    <version>3.9.56</version>
+    <version>3.9.60</version>
     <authors>Demis Bellot</authors>
     <owners>Demis Bellot</owners>
     <summary>Opensource .NET and Mono REST Web Services framework</summary>
@@ -20,9 +20,9 @@
     <language>en-US</language>
     <copyright>servicestack.net 2012 and contributors</copyright>
     <dependencies>
-      <dependency id="ServiceStack.Common" />
-      <dependency id="ServiceStack.Redis" />
-      <dependency id="ServiceStack.OrmLite.SqlServer" />
+      <dependency id="ServiceStack.Common" version="4.0" />
+      <dependency id="ServiceStack.Redis" version="4.0" />
+      <dependency id="ServiceStack.OrmLite.SqlServer" version="4.0" />
     </dependencies>
   </metadata>
   <files>

@@ -4,14 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web;
+using System.Web.Hosting;
 using Funq;
 using ServiceStack.Common;
 using ServiceStack.Configuration;
 using ServiceStack.Html;
 using ServiceStack.IO;
 using ServiceStack.Logging;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.WebHost.Endpoints.Extensions;
 
 namespace ServiceStack.WebHost.Endpoints
 {
@@ -173,11 +174,11 @@ namespace ServiceStack.WebHost.Endpoints
 			get { return EndpointHost.ServiceManager.ServiceController.RequestTypeFactoryMap; }
 		}
 
-		public IContentTypeFilter ContentTypeFilters
+		public IContentTypes ContentTypeses
 		{
 			get
 			{
-				return EndpointHost.ContentTypeFilter;
+				return EndpointHost.ContentTypes;
 			}
 		}
 
@@ -189,7 +190,7 @@ namespace ServiceStack.WebHost.Endpoints
 			}
 		}
 
-		public List<Action<IHttpRequest, IHttpResponse, object>> RequestFilters
+		public List<Action<IHttpRequest, IHttpResponse, object>> GlobalRequestFilters
 		{
 			get
 			{
@@ -197,7 +198,7 @@ namespace ServiceStack.WebHost.Endpoints
 			}
 		}
 
-		public List<Action<IHttpRequest, IHttpResponse, object>> ResponseFilters
+		public List<Action<IHttpRequest, IHttpResponse, object>> GlobalResponseFilters
 		{
 			get
 			{
@@ -254,6 +255,12 @@ namespace ServiceStack.WebHost.Endpoints
 
         public virtual string ResolveAbsoluteUrl(string virtualPath, IHttpRequest httpReq)
         {
+            if (HostingEnvironment.ApplicationVirtualPath != null
+                && virtualPath.StartsWith("~" + HostingEnvironment.ApplicationVirtualPath))
+            {
+                virtualPath = virtualPath.Remove(1, HostingEnvironment.ApplicationVirtualPath.Length);
+            }
+
             return Config.WebHostUrl == null 
                 ? VirtualPathUtility.ToAbsolute(virtualPath) 
                 : httpReq.GetAbsoluteUrl(virtualPath);
@@ -287,27 +294,16 @@ namespace ServiceStack.WebHost.Endpoints
 
 		public void RegisterService(Type serviceType, params string[] atRestPaths)
 		{
-			var genericService = EndpointHost.Config.ServiceManager.RegisterService(serviceType);
-            if (genericService != null)
+            EndpointHost.Config.ServiceManager.RegisterService(serviceType);
+            var reqAttr = serviceType.GetCustomAttributes(true).OfType<DefaultRequestAttribute>().FirstOrDefault();
+            if (reqAttr != null)
             {
-                var requestType = genericService.GetGenericArguments()[0];
                 foreach (var atRestPath in atRestPaths)
                 {
-                    this.Routes.Add(requestType, atRestPath, null);
+                    this.Routes.Add(reqAttr.RequestType, atRestPath, null);
                 }
             }
-            else
-            {
-                var reqAttr = serviceType.GetCustomAttributes(true).OfType<DefaultRequestAttribute>().FirstOrDefault();
-                if (reqAttr != null)
-                {
-                    foreach (var atRestPath in atRestPaths)
-                    {
-                        this.Routes.Add(reqAttr.RequestType, atRestPath, null);
-                    }
-                }
-            }
-		}
+        }
 		
 		public virtual void Dispose()
 		{

@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Web;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
+using ServiceStack.Serialization;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceModel.Serialization;
 using ServiceStack.Text;
+using ServiceStack.Web;
 
 namespace ServiceStack.WebHost.Endpoints.Formats
 {
@@ -26,12 +26,12 @@ namespace ServiceStack.WebHost.Endpoints.Formats
 		{
 			AppHost = appHost;
 			//Register this in ServiceStack with the custom formats
-			appHost.ContentTypeFilters.Register(ContentType.Html, SerializeToStream, null);
-			appHost.ContentTypeFilters.Register(ContentType.JsonReport, SerializeToStream, null);
+            appHost.ContentTypeses.Register(MimeTypes.Html, SerializeToStream, null);
+            appHost.ContentTypeses.Register(MimeTypes.JsonReport, SerializeToStream, null);
 
-			appHost.Config.DefaultContentType = ContentType.Html;
-			appHost.Config.IgnoreFormatsInMetadata.Add(ContentType.Html.ToContentFormat());
-			appHost.Config.IgnoreFormatsInMetadata.Add(ContentType.JsonReport.ToContentFormat());
+            appHost.Config.DefaultContentType = MimeTypes.Html;
+            appHost.Config.IgnoreFormatsInMetadata.Add(MimeTypes.Html.ToContentFormat());
+            appHost.Config.IgnoreFormatsInMetadata.Add(MimeTypes.JsonReport.ToContentFormat());
 		}
 
 		public void SerializeToStream(IRequestContext requestContext, object response, IHttpResponse httpRes)
@@ -43,10 +43,10 @@ namespace ServiceStack.WebHost.Endpoints.Formats
 
             if (httpReq != null && AppHost.ViewEngines.Any(x => x.ProcessRequest(httpReq, httpRes, response))) return;
 
-			if (requestContext.ResponseContentType != ContentType.Html && httpReq != null
-				&& httpReq.ResponseContentType != ContentType.JsonReport) return;
+            if (requestContext.ResponseContentType != MimeTypes.Html && httpReq != null
+                && httpReq.ResponseContentType != MimeTypes.JsonReport) return;
 
-		    var dto = response.ToDto();
+		    var dto = response.GetDto();
 		    var html = dto as string;
             if (html == null)
             {

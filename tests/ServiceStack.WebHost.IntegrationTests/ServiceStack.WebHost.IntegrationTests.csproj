@@ -193,6 +193,7 @@
       <DependentUpon>Default.aspx</DependentUpon>
     </Compile>
     <Compile Include="Services\CachedProtoBufEmailService.cs" />
+    <Compile Include="Services\ReturnsVoidService.cs" />
     <Compile Include="Services\CustomHeadersService.cs" />
     <Compile Include="Services\EndpointAccessService.cs" />
     <Compile Include="Services\HelloImage.cs" />
@@ -349,5 +350,5 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
-  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
 </Project>

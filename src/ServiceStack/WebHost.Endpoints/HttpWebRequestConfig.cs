@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Web;
 using System.Web.Security;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
 
 namespace ServiceStack.WebHost.Endpoints
 {
@@ -9,7 +9,7 @@ namespace ServiceStack.WebHost.Endpoints
 	{
 		public static void Configure()
 		{
-			ServiceClientBase.HttpWebRequestFilter = TransferAuthenticationTokens;
+			ServiceClientBase.GlobalRequestFilter = TransferAuthenticationTokens;
 		}
 
 		public static void TransferAuthenticationTokens(HttpWebRequest httpWebRequest)

@@ -1,7 +1,11 @@
-using ProtoBuf;
+using System;
 using System.IO;
-using ServiceStack.ServiceClient.Web;
+using System.Runtime.Serialization;
+using ProtoBuf;
+using ServiceStack.Server;
+using ServiceStack.Clients;
 using ServiceStack.ServiceHost;
+using ServiceStack.Text;
 
 namespace ServiceStack.Plugins.ProtoBuf
 {
@@ -22,22 +26,48 @@ namespace ServiceStack.Plugins.ProtoBuf
 
 		public override void SerializeToStream(IRequestContext requestContext, object request, Stream stream)
 		{
-			Serializer.NonGeneric.Serialize(stream, request);
+			try
+			{
+				Serializer.NonGeneric.Serialize(stream, request);
+			}
+			catch (Exception ex)
+			{
+				throw new SerializationException("ProtoBufServiceClient: Error serializing: " + ex.Message, ex);
+			}
 		}
 
 		public override T DeserializeFromStream<T>(Stream stream)
 		{
-			return Serializer.Deserialize<T>(stream);
+			try
+			{
+				return Serializer.Deserialize<T>(stream);
+			}
+			catch (Exception ex)
+			{
+				throw new SerializationException("ProtoBufServiceClient: Error deserializing: " + ex.Message, ex);
+			}
 		}
 
 		public override string ContentType
 		{
-			get { return Common.Web.ContentType.ProtoBuf; }
+            get { return MimeTypes.ProtoBuf; }
 		}
 
 		public override StreamDeserializerDelegate StreamDeserializer
 		{
-			get { return Serializer.NonGeneric.Deserialize; }
+			get { return Deserialize; }
+		}
+		
+		private static object Deserialize(Type type, Stream source)
+		{
+			try
+			{
+				return Serializer.NonGeneric.Deserialize(type, source);
+			}
+			catch (Exception ex)
+			{
+				throw new SerializationException("ProtoBufServiceClient: Error deserializing: " + ex.Message, ex);
+			}
 		}
 	}
 }

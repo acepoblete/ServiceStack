@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
 using NUnit.Framework;
-using ServiceStack.Service;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
+using ServiceStack.Clients;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Host;
 
 namespace ServiceStack.WebHost.Endpoints.Tests

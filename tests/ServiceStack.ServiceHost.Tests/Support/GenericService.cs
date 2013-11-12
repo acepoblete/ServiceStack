@@ -1,6 +1,7 @@
 using System.Runtime.Serialization;
 using System.Reflection;
 using System;
+using ServiceStack.Server;
 
 namespace ServiceStack.ServiceHost.Tests.Support
 {
@@ -19,11 +20,11 @@ namespace ServiceStack.ServiceHost.Tests.Support
         public T Data { get; set; }
     }
 
-	public class GenericService<T> : IService<T>
+	public class GenericService<T> : IService
 	{
-        public object Execute(T request)
+        public object Any(T request)
         {
-            return new Generic1Response() { Data = request.GetType().FullName };
+            return new Generic1Response { Data = request.GetType().FullName };
         }
     }
 }

@@ -4,9 +4,9 @@ using System.Net;
 using System.Web;
 using NUnit.Framework;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
 using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Host;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Operations;
 
@@ -20,7 +20,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		ExampleAppHostHttpListener appHost;
 		readonly JsonServiceClient client = new JsonServiceClient(ListeningOn);
 		private string customUrl = ListeningOn.CombineWith("customrequestbinder");
-		private string predefinedUrl = ListeningOn.CombineWith("json/syncreply/customrequestbinder");
+		private string predefinedUrl = ListeningOn.CombineWith("json/reply/customrequestbinder");
 
 		[TestFixtureSetUp]
 		public void OnTestFixtureSetUp()
@@ -44,7 +44,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		{
 			var webReq = (HttpWebRequest)WebRequest.Create("http://localhost:82/customformdata?format=json");
 			webReq.Method = HttpMethods.Post;
-			webReq.ContentType = ContentType.FormUrlEncoded;
+            webReq.ContentType = MimeTypes.FormUrlEncoded;
 
 			try
 			{
@@ -108,7 +108,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		[Test]
 		public void Does_use_request_binder_for_POST_FormData()
 		{
-			var responseStr = customUrl.PostToUrl("IsFromBinder=false", acceptContentType:ContentType.Json);
+            var responseStr = customUrl.PostToUrl("IsFromBinder=false", accept: MimeTypes.Json);
 			Console.WriteLine(responseStr);
 			var response = responseStr.FromJson<CustomRequestBinderResponse>();
 			Assert.That(response.FromBinder);
@@ -127,7 +127,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		public void Does_use_request_binder_for_POST_FormData_without_ContentType_with_QueryString()
 		{
 			string customUrlWithQueryString = customUrl + "?IsFromBinder=false";
-			var responseStr = customUrlWithQueryString.PostToUrl("k=v", acceptContentType: ContentType.Json);
+            var responseStr = customUrlWithQueryString.PostToUrl("k=v", accept: MimeTypes.Json);
 			var response = responseStr.FromJson<CustomRequestBinderResponse>();
 			Assert.That(response.FromBinder);
 		}
@@ -144,7 +144,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		[Test]
 		public void Does_use_request_binder_for_predefined_POST_FormData()
 		{
-			var responseStr = predefinedUrl.PostToUrl("k=v", acceptContentType: ContentType.Json);
+            var responseStr = predefinedUrl.PostToUrl("k=v", accept: MimeTypes.Json);
 			Console.WriteLine(responseStr);
 			var response = responseStr.FromJson<CustomRequestBinderResponse>();
 			Assert.That(response.FromBinder);

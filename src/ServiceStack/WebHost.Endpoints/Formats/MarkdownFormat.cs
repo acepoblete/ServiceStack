@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
 using ServiceStack.Html;
 using ServiceStack.IO;
 using ServiceStack.Logging;
 using ServiceStack.Markdown;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
 using ServiceStack.VirtualPath;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints.Support;
 using ServiceStack.WebHost.Endpoints.Support.Markdown;
 
@@ -167,10 +167,10 @@ namespace ServiceStack.WebHost.Endpoints.Formats
                 };
             });
 
-            appHost.ContentTypeFilters.Register(ContentType.MarkdownText, SerializeToStream, null);
-            appHost.ContentTypeFilters.Register(ContentType.PlainText, SerializeToStream, null);
-            appHost.Config.IgnoreFormatsInMetadata.Add(ContentType.MarkdownText.ToContentFormat());
-            appHost.Config.IgnoreFormatsInMetadata.Add(ContentType.PlainText.ToContentFormat());
+            appHost.ContentTypeses.Register(MimeTypes.MarkdownText, SerializeToStream, null);
+            appHost.ContentTypeses.Register(MimeTypes.PlainText, SerializeToStream, null);
+            appHost.Config.IgnoreFormatsInMetadata.Add(MimeTypes.MarkdownText.ToContentFormat());
+            appHost.Config.IgnoreFormatsInMetadata.Add(MimeTypes.PlainText.ToContentFormat());
         }
 
         public MarkdownPage FindByPathInfo(string pathInfo)
@@ -249,7 +249,7 @@ namespace ServiceStack.WebHost.Endpoints.Formats
 
             if (!renderHtml)
             {
-                httpRes.ContentType = ContentType.PlainText;
+                httpRes.ContentType = MimeTypes.PlainText;
             }
 
             var template = httpReq.GetTemplate();
@@ -322,7 +322,7 @@ namespace ServiceStack.WebHost.Endpoints.Formats
         /// </summary>
         public void SerializeToStream(IRequestContext requestContext, object response, Stream stream)
         {
-            var dto = response.ToDto();
+            var dto = response.GetDto();
             var text = dto as string;
             if (text != null)
             {

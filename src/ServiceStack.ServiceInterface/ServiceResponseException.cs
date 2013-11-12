@@ -1,6 +1,5 @@
 using System;
-using ServiceStack.Common.Extensions;
-using ServiceStack.ServiceInterface.ServiceModel;
+using ServiceStack.Text;
 
 namespace ServiceStack.ServiceInterface
 {

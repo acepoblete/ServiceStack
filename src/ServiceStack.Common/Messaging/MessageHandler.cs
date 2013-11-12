@@ -1,10 +1,9 @@
 using System;
 using System.Linq;
+using ServiceStack.Clients;
 using ServiceStack.Common;
 using ServiceStack.Logging;
-using ServiceStack.Service;
 using ServiceStack.Text;
-using StringExtensions = ServiceStack.Common.StringExtensions;
 
 namespace ServiceStack.Messaging
 {
@@ -154,20 +153,20 @@ namespace ServiceStack.Messaging
                 {
                     var responseType = response.GetType();
 
-                    var publishAllResponses = PublishResponsesWhitelist == null;
-                    if (!publishAllResponses)
-                    {
-                        var inWhitelist = PublishResponsesWhitelist.Any(publishResponse => responseType.Name == publishResponse);
-                        if (!inWhitelist) return;
-                    }
-
-                    //If there is a response send it to the typed response InQ
+                    //If there's no explicit ReplyTo, send it to the typed Response InQ by default
                     var mqReplyTo = message.ReplyTo;
-
                     if (mqReplyTo == null)
                     {
+                        //Disable default handling of MQ Responses if whitelist exists and Response not in whitelist
+                        var publishAllResponses = PublishResponsesWhitelist == null;
+                        if (!publishAllResponses)
+                        {
+                            var inWhitelist = PublishResponsesWhitelist.Any(publishResponse => responseType.Name == publishResponse);
+                            if (!inWhitelist) return;
+                        }
+
                         // Leave as-is to work around a Mono 2.6.7 compiler bug
-                        if (!StringExtensions.IsUserType(responseType)) return;
+                        if (!responseType.IsUserType()) return;
                         mqReplyTo = new QueueNames(responseType).In;
                     }
                     
@@ -185,7 +184,7 @@ namespace ServiceStack.Messaging
                                 .Fmt(mqReplyTo, replyClient.GetType().Name), ex);
 
                             // Leave as-is to work around a Mono 2.6.7 compiler bug
-                            if (!StringExtensions.IsUserType(responseType)) return;
+                            if (!responseType.IsUserType()) return;
 
                             mqReplyTo = new QueueNames(responseType).In;
                         }

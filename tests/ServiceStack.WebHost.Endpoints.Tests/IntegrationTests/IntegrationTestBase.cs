@@ -1,11 +1,12 @@
 ﻿using System;
 using Funq;
 using ServiceStack.Configuration;
+using ServiceStack.Data;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
 using ServiceStack.OrmLite;
 using ServiceStack.OrmLite.Sqlite;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Host;
 
 namespace ServiceStack.WebHost.Endpoints.Tests.IntegrationTests
@@ -40,9 +41,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests.IntegrationTests
 
 		public override void Configure(Container container)
 		{
-			container.Register<IResourceManager>(new ConfigurationResourceManager());
+			container.Register<IAppSettings>(new ConfigurationResourceManager());
 
-			container.Register(c => new ExampleConfig(c.Resolve<IResourceManager>()));
+			container.Register(c => new ExampleConfig(c.Resolve<IAppSettings>()));
 			//var appConfig = container.Resolve<ExampleConfig>();
 
 			container.Register<IDbConnectionFactory>(c =>

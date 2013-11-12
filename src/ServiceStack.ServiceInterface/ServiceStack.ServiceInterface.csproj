@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ServiceStack.ServiceInterface</RootNamespace>
     <AssemblyName>ServiceStack.ServiceInterface</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -31,6 +31,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -107,11 +108,10 @@
     <Compile Include="AddHeaderAttribute.cs" />
     <Compile Include="Admin\RequestLogsFeature.cs" />
     <Compile Include="ApplyTo.cs" />
-    <Compile Include="AsyncServiceBase.cs" />
     <Compile Include="AuthenticateAttribute.cs" />
     <Compile Include="AuthFeature.cs" />
     <Compile Include="Auth\AssignRolesService.cs" />
-    <Compile Include="Auth\AuthService.cs" />
+    <Compile Include="Auth\AuthenticateService.cs" />
     <Compile Include="Auth\BasicAuthProvider.cs" />
     <Compile Include="Auth\CredentialsAuthProvider.cs" />
     <Compile Include="Auth\DigestAuthProvider.cs" />
@@ -138,7 +138,7 @@
     <Compile Include="RequiresAnyPermission.cs" />
     <Compile Include="RequiresAnyRoleAttribute.cs" />
     <Compile Include="RequiredRoleAttribute.cs" />
-    <Compile Include="Auth\RegistrationService.cs" />
+    <Compile Include="Auth\RegisterService.cs" />
     <Compile Include="Auth\OAuthAuthorizer.cs" />
     <Compile Include="Auth\AuthProvider.cs" />
     <Compile Include="Auth\AuthUserSession.cs" />
@@ -221,8 +221,6 @@
     <Compile Include="RoleNames.cs" />
     <Compile Include="Service.cs" />
     <Compile Include="ServiceExtensions.cs" />
-    <Compile Include="RestServiceBase.cs" />
-    <Compile Include="ServiceBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceResponseException.cs" />
     <Compile Include="ServiceRoutesExtensions.cs" />
@@ -248,7 +246,7 @@
     <Compile Include="FluentValidation\ValidationErrors.cs" />
     <Compile Include="Validation\ValidationFilters.cs" />
     <Compile Include="Validation\ValidationFeature.cs" />
-    <Compile Include="Validation\ValidationResultExtensions.cs" />
+    <Compile Include="ValidationResultExtensions.cs" />
     <Compile Include="Validation\ValidatorCache.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -269,9 +267,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\ServiceStack.Common\ServiceStack.Common.csproj">
       <Project>{982416DB-C143-4028-A0C3-CF41892D18D3}</Project>
       <Name>ServiceStack.Common</Name>
@@ -285,9 +280,7 @@
       <Name>ServiceStack</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Swagger\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <EmbeddedResource Include="FluentValidation\Resources\Messages.resx" />
   </ItemGroup>

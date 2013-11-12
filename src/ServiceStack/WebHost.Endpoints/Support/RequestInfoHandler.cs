@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Runtime.Serialization;
 using System.Web;
-using ServiceStack.Common.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
-using HttpRequestWrapper = ServiceStack.WebHost.Endpoints.Extensions.HttpRequestWrapper;
-using HttpResponseWrapper = ServiceStack.WebHost.Endpoints.Extensions.HttpResponseWrapper;
+using HttpRequestWrapper = ServiceStack.WebHost.Endpoints.Wrappers.HttpRequestWrapper;
+using HttpResponseWrapper = ServiceStack.WebHost.Endpoints.Wrappers.HttpResponseWrapper;
 
 namespace ServiceStack.WebHost.Endpoints.Support
 {
@@ -124,7 +124,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
 			}
 
 			var json = JsonSerializer.SerializeToString(response);
-			httpRes.ContentType = ContentType.Json;
+            httpRes.ContentType = MimeTypes.Json;
 			httpRes.Write(json);
 		}
 

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface.Admin;
 using ServiceStack.WebHost.Endpoints;
@@ -29,7 +30,7 @@ namespace ServiceStack.Razor.Tests
 
             this.PreRequestFilters.Add(SimplePreRequestFilter);
 
-            this.RequestFilters.Add(SimpleRequestFilter);
+            this.GlobalRequestFilters.Add(SimpleRequestFilter);
 
             //this.SetConfig( new EndpointHostConfig()
             //    {

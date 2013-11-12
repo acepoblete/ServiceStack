@@ -1,8 +1,8 @@
 using System;
 using System.Net;
 using NUnit.Framework;
-using ServiceStack.Service;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
+using ServiceStack.Clients;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface.Testing;
 using ServiceStack.Text;
@@ -97,7 +97,7 @@ namespace ServiceStack.WebHost.IntegrationTests.Tests
 	{
 		protected override IServiceClient CreateNewServiceClient()
 		{
-			EndpointHandlerBase.ServiceManager = new ServiceManager(true, typeof(ReverseService).Assembly);
+            EndpointHandlerBase.ServiceManager = new ServiceManager(typeof(ReverseService).Assembly).Init();
 			return new DirectServiceClient(this, EndpointHandlerBase.ServiceManager);
 		}
 	}

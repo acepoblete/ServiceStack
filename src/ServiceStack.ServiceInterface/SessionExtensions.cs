@@ -4,14 +4,14 @@ using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Web;
-using ServiceStack.CacheAccess;
+using ServiceStack.Caching;
 using ServiceStack.Common;
 using ServiceStack.Configuration;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface.Auth;
 using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints;
-using ServiceStack.WebHost.Endpoints.Extensions;
 
 namespace ServiceStack.ServiceInterface
 {

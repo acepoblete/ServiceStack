@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using ServiceStack.Service;
-using ServiceStack.ServiceHost;
+using ServiceStack.Server;
+using ServiceStack.Text;
 
-namespace ServiceStack.Common.Web
+namespace ServiceStack.Web
 {
     public class CompressedResult
         : IStreamWriter, IHttpResult

@@ -1,17 +1,15 @@
-﻿using System;
-using System.IO;
-using System.Runtime.Serialization;
+﻿using System.IO;
 using System.Text;
 using MsgPack;
 using MsgPack.Serialization;
 using NUnit.Framework;
+using ServiceStack;
 using ServiceStack.Common;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
 using ServiceStack.Plugins.MsgPack;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
 using ServiceStack.ServiceInterface;
-using ServiceStack.ServiceInterface.ServiceModel;
 using ServiceStack.Text;
 
 namespace RazorRockstars.Console.Files
@@ -62,9 +60,9 @@ namespace RazorRockstars.Console.Files
         public ResponseStatus ResponseStatus { get; set; }
     }
 
-    public class MsgPackEmailService : ServiceBase<MsgPackEmail>
+    public class MsgPackEmailService : Service
     {
-        protected override object Run(MsgPackEmail request)
+        public object Any(MsgPackEmail request)
         {
             return request;
         }

@@ -2,11 +2,10 @@ using System;
 using System.IO;
 using System.Net;
 using NUnit.Framework;
-using ServiceStack.Common.Web;
 using ServiceStack.Logging;
-using ServiceStack.ServiceInterface.ServiceModel;
 using ServiceStack.ServiceInterface.Testing;
 using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
 using ServiceStack.WebHost.IntegrationTests.Services;
 
@@ -80,7 +79,7 @@ namespace ServiceStack.WebHost.IntegrationTests.Tests
 					{
 						using (var stream = errorResponse.GetResponseStream())
 						{
-							var response = HttpResponseFilter.Instance.DeserializeFromStream(contentType, typeof(T), stream);
+							var response = ContentTypes.Instance.DeserializeFromStream(contentType, typeof(T), stream);
 							return (T)response;
 						}
 					}
@@ -159,16 +158,16 @@ namespace ServiceStack.WebHost.IntegrationTests.Tests
 			T result;
 			switch (contentType)
 			{
-				case ContentType.Xml:
+                case MimeTypes.Xml:
 					result = XmlSerializer.DeserializeFromString<T>(contents);
 					break;
 
-				case ContentType.Json:
-				case ContentType.Json + ContentType.Utf8Suffix:
+                case MimeTypes.Json:
+                case MimeTypes.Json + ContentFormat.Utf8Suffix:
 					result = JsonSerializer.DeserializeFromString<T>(contents);
 					break;
 
-				case ContentType.Jsv:
+                case MimeTypes.Jsv:
 					result = TypeSerializer.DeserializeFromString<T>(contents);
 					break;
 

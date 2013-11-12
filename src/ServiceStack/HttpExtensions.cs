@@ -2,11 +2,12 @@
 using System.Net;
 using System.Web;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Server;
+using ServiceStack.Clients;
 using ServiceStack.ServiceHost;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.WebHost.Endpoints.Wrappers;
 
 namespace ServiceStack
 {

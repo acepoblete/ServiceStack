@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Collections.Generic;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Configuration;
 using ServiceStack.FluentValidation;
@@ -10,14 +10,13 @@ using System;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
-using HttpResponseExtensions = ServiceStack.WebHost.Endpoints.Extensions.HttpResponseExtensions;
+using ServiceStack.Web;
 
 namespace ServiceStack.ServiceInterface.Auth
 {
     public class DigestAuthProvider : AuthProvider
     {
-        class DigestAuthValidator : AbstractValidator<Auth>
+        class DigestAuthValidator : AbstractValidator<Authenticate>
         {
             public DigestAuthValidator()
             {
@@ -26,21 +25,21 @@ namespace ServiceStack.ServiceInterface.Auth
             }
         }
 
-        public static string Name = AuthService.DigestProvider;
-        public static string Realm = "/auth/" + AuthService.DigestProvider;
+        public static string Name = AuthenticateService.DigestProvider;
+        public static string Realm = "/auth/" + AuthenticateService.DigestProvider;
         public static int NonceTimeOut = 600;
         public string PrivateKey;
-        public IResourceManager AppSettings { get; set; }
+        public IAppSettings AppSettings { get; set; }
         public DigestAuthProvider()
         {
             this.Provider = Name;
             PrivateKey = Guid.NewGuid().ToString();
             this.AuthRealm = Realm;
         }
-        public DigestAuthProvider(IResourceManager appSettings, string authRealm, string oAuthProvider)
+        public DigestAuthProvider(IAppSettings appSettings, string authRealm, string oAuthProvider)
             : base(appSettings, authRealm, oAuthProvider) { }
 
-        public DigestAuthProvider(IResourceManager appSettings)
+        public DigestAuthProvider(IAppSettings appSettings)
             : base(appSettings, Realm, Name) { }
 
         public virtual bool TryAuthenticate(IServiceBase authService, string userName, string password)
@@ -69,7 +68,7 @@ namespace ServiceStack.ServiceInterface.Auth
             return false;
         }
 
-        public override bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Auth request = null)
+        public override bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Authenticate request = null)
         {
             if (request != null)
             {
@@ -79,7 +78,7 @@ namespace ServiceStack.ServiceInterface.Auth
             return !session.UserAuthName.IsNullOrEmpty();
         }
 
-        public override object Authenticate(IServiceBase authService, IAuthSession session, Auth request)
+        public override object Authenticate(IServiceBase authService, IAuthSession session, Authenticate request)
         {
             //new CredentialsAuthValidator().ValidateAndThrow(request);
             return Authenticate(authService, session, request.UserName, request.Password);
@@ -100,7 +99,7 @@ namespace ServiceStack.ServiceInterface.Auth
 
                 OnAuthenticated(authService, session, null, null);
 
-                return new AuthResponse
+                return new AuthenticateResponse
                 {
                     UserName = userName,
                     SessionId = session.Id,
@@ -129,7 +128,7 @@ namespace ServiceStack.ServiceInterface.Auth
 
                 foreach (var oAuthToken in session.ProviderOAuthAccess)
                 {
-                    var authProvider = AuthService.GetAuthProvider(oAuthToken.Provider);
+                    var authProvider = AuthenticateService.GetAuthProvider(oAuthToken.Provider);
                     if (authProvider == null) continue;
                     var userAuthProvider = authProvider as OAuthProvider;
                     if (userAuthProvider != null)
@@ -154,7 +153,7 @@ namespace ServiceStack.ServiceInterface.Auth
             var digestHelper = new DigestAuthFunctions();
             httpRes.StatusCode = (int)HttpStatusCode.Unauthorized;
             httpRes.AddHeader(HttpHeaders.WwwAuthenticate, "{0} realm=\"{1}\", nonce=\"{2}\", qop=\"auth\"".Fmt(Provider, AuthRealm,digestHelper.GetNonce(httpReq.UserHostAddress,PrivateKey)));
-            httpRes.EndServiceStackRequest();
+            httpRes.EndRequest();
         }
     }
 }

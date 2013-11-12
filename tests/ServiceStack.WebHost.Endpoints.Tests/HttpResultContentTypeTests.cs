@@ -3,10 +3,10 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using NUnit.Framework;
-using ServiceStack.Common.Web;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Host;
 using System.Collections.Specialized;
 using System.Linq;
@@ -51,8 +51,10 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             public string Text { get; set; }
         }
 
-        public class TimedService : ServiceStack.ServiceInterface.ServiceBase<PlainText> {
-            protected override object Run(PlainText request) {
+        public class TimedService : ServiceStack.ServiceInterface.Service
+        {
+            public object Any(PlainText request) 
+            {
                 string contentType = "text/plain";
                 var response = new HttpResult(request.Text, contentType);
                 if(request.SetContentTypeBrutally) {

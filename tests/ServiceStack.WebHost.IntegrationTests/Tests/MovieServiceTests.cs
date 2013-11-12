@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using ServiceStack.Common.Extensions;
-using ServiceStack.Common.Utils;
-using ServiceStack.Common.Web;
+using ServiceStack.Data;
 using ServiceStack.OrmLite;
 using ServiceStack.OrmLite.Sqlite;
-using ServiceStack.ServiceClient.Web;
-using ServiceStack.ServiceModel.Serialization;
+using ServiceStack.Clients;
 using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.IntegrationTests.Services;
 
 namespace ServiceStack.WebHost.IntegrationTests.Tests
@@ -22,7 +20,7 @@ namespace ServiceStack.WebHost.IntegrationTests.Tests
 			Title = "The Shawshank Redemption",
 			Rating = 9.2m,
 			Director = "Frank Darabont",
-			ReleaseDate = new DateTime(1995, 2, 17).ToUniversalTime(),
+			ReleaseDate = new DateTime(1995, 2, 17),
 			TagLine = "Fear can hold you prisoner. Hope can set you free.",
 			Genres = new List<string> { "Crime", "Drama" },
 		};

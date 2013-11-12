@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Net;
 using NUnit.Framework;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
+using ServiceStack.ServiceInterface;
 using ServiceStack.ServiceInterface.Auth;
 using ServiceStack.Text;
 using ServiceStack.WebHost.IntegrationTests.Services;
@@ -12,12 +13,12 @@ namespace ServiceStack.WebHost.IntegrationTests.Tests
 	[TestFixture]
 	public class ManageRolesTests : AuthTestsBase
 	{
-		protected Registration registration;
+		protected Register register;
 
 		[TestFixtureSetUp]
 		public void TestFixtureSetUp()
 		{
-			registration = CreateAdminUser();
+			register = CreateAdminUser();
 		}
 
 		public string RoleName1 = "Role1";
@@ -28,11 +29,11 @@ namespace ServiceStack.WebHost.IntegrationTests.Tests
 		public string Permission1 = "Permission1";
 		public string Permission2 = "Permission2";
 
-		public Registration RegisterNewUser(bool? autoLogin = null)
+		public Register RegisterNewUser(bool? autoLogin = null)
 		{
 			var userId = Environment.TickCount % 10000;
 
-			var newUserRegistration = new Registration {
+			var newUserRegistration = new Register {
 				UserName = "UserName" + userId,
 				DisplayName = "DisplayName" + userId,
 				Email = "user{0}@sf.com".Fmt(userId),
@@ -223,6 +224,30 @@ namespace ServiceStack.WebHost.IntegrationTests.Tests
 
 			Assert.That(response.Result, Is.EqualTo("Haz Access"));
 		}
+
+        [Test]
+        public void Cannot_access_Admin_service_by_default()
+        {
+            try
+            {
+                BaseUri.AppendPath("requestlogs").GetStringFromUrl();
+
+                Assert.Fail("Should not allow access to protected resource");
+            }
+            catch (Exception ex)
+            {
+                if (ex.IsUnauthorized())
+                    return;
+
+                throw;
+            }
+        }
+
+        [Test]
+        public void Can_access_Admin_service_with_AuthSecret()
+        {
+            BaseUri.AppendPath("requestlogs").AddQueryParam("authsecret", AuthSecret).GetStringFromUrl();
+        }
 
 	}
 }

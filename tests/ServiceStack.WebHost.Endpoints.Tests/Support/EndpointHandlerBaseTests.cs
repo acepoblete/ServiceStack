@@ -4,9 +4,9 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using Moq;
 using NUnit.Framework;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
 
 namespace ServiceStack.WebHost.Endpoints.Support.Tests
 {
@@ -15,7 +15,7 @@ namespace ServiceStack.WebHost.Endpoints.Support.Tests
     {
         class TestHandler : EndpointHandlerBase
         {
-            public override object CreateRequest(ServiceHost.IHttpRequest request, string operationName)
+            public override object CreateRequest(IHttpRequest request, string operationName)
             {
                 throw new NotImplementedException();
             }

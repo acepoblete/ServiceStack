@@ -1,7 +1,8 @@
 ﻿using NUnit.Framework;
-using ServiceStack.Common.Web;
 using ServiceStack.ServiceHost.Tests.Formats;
 using ServiceStack.ServiceInterface.Testing;
+using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
 using ServiceStack.WebHost.Endpoints.Formats;
 
@@ -25,19 +26,19 @@ namespace ServiceStack.ServiceHost.Tests
         [Test]
         public void Can_optimize_json_result_with_ToOptimizedResult()
         {
-            CanOptimizeResult(ContentType.Json, null);
+            CanOptimizeResult(MimeTypes.Json, null);
         }
 
         [Test]
         public void Can_optimize_xml_result_with_ToOptimizedResult()
         {
-            CanOptimizeResult(ContentType.Xml, null);
+            CanOptimizeResult(MimeTypes.Xml, null);
         }
 
         [Test]
         public void Can_optimize_jsv_result_with_ToOptimizedResult()
         {
-            CanOptimizeResult(ContentType.Jsv, null);
+            CanOptimizeResult(MimeTypes.Jsv, null);
         }
 
         private static void CanOptimizeResult(string contentType, IPlugin pluginFormat)
@@ -54,7 +55,7 @@ namespace ServiceStack.ServiceHost.Tests
             var appHost = new TestAppHost();
             if (pluginFormat != null) pluginFormat.Register(appHost);
 
-            EndpointHost.ContentTypeFilter = appHost.ContentTypeFilters;
+            EndpointHost.ContentTypes = appHost.ContentTypeses;
 
             object result = httpRequestContext.ToOptimizedResult(dto);
             Assert.IsNotNull(result);

@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Funq;
-using ServiceStack.Common.Web;
 using ServiceStack.Html;
 using ServiceStack.IO;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface.Validation;
 using ServiceStack.VirtualPath;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
-using ServiceStack.WebHost.Endpoints.Extensions;
 
 namespace ServiceStack.ServiceInterface.Testing
 {
@@ -31,12 +30,12 @@ namespace ServiceStack.ServiceInterface.Testing
 
             this.Config = EndpointHost.Config = new EndpointHostConfig(
                 GetType().Name,
-                new ServiceManager(true, serviceAssemblies));
+                new ServiceManager(this.container, serviceAssemblies).Init());
 
-            this.ContentTypeFilters = new HttpResponseFilter();
+            this.ContentTypeses = new ContentTypes();
             this.PreRequestFilters = new List<Action<IHttpRequest, IHttpResponse>>();
-            this.RequestFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
-            this.ResponseFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
+            this.GlobalRequestFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
+            this.GlobalResponseFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
             this.ViewEngines = new List<IViewEngine>();
             this.CatchAllHandlers = new List<HttpHandlerResolverDelegate>();
 			this.VirtualPathProvider = new FileSystemVirtualPathProvider(this);
@@ -63,13 +62,13 @@ namespace ServiceStack.ServiceInterface.Testing
             return container.TryResolve<T>();
         }
 
-        public IContentTypeFilter ContentTypeFilters { get; set; }
+        public IContentTypes ContentTypeses { get; set; }
 
         public List<Action<IHttpRequest, IHttpResponse>> PreRequestFilters { get; set; }
 
-        public List<Action<IHttpRequest, IHttpResponse, object>> RequestFilters { get; set; }
+        public List<Action<IHttpRequest, IHttpResponse, object>> GlobalRequestFilters { get; set; }
 
-        public List<Action<IHttpRequest, IHttpResponse, object>> ResponseFilters { get; set; }
+        public List<Action<IHttpRequest, IHttpResponse, object>> GlobalResponseFilters { get; set; }
 
         public List<IViewEngine> ViewEngines { get; private set; }
 

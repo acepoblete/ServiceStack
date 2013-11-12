@@ -129,6 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\AppSettingsTests.cs" />
+    <Compile Include="CryptUtilTest.cs" />
     <Compile Include="EndpointHandlerBaseTests.cs" />
     <Compile Include="FluentValidation\ErrorCodeTests.cs" />
     <Compile Include="FunqTests.cs" />
@@ -147,6 +148,7 @@
     <Compile Include="Models\ModelWithFieldsOfNullableTypesFactory.cs" />
     <Compile Include="Models\ModelWithMapAndList.cs" />
     <Compile Include="Models\Movie.cs" />
+    <Compile Include="Models\Poco.cs" />
     <Compile Include="Models\Shipper.cs" />
     <Compile Include="Models\ShipperFactory.cs" />
     <Compile Include="Models\BuiltInsFactory.cs" />

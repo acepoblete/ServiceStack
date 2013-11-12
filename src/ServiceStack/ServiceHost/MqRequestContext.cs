@@ -2,7 +2,9 @@
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Net;
+using ServiceStack.Configuration;
 using ServiceStack.Messaging;
+using ServiceStack.Server;
 using ServiceStack.Text;
 
 namespace ServiceStack.ServiceHost
@@ -21,7 +23,7 @@ namespace ServiceStack.ServiceHost
         {
             this.Resolver = resolver;
             this.Message = message;
-            this.ContentType = this.ResponseContentType = Common.Web.ContentType.Json;
+            this.ContentType = this.ResponseContentType = MimeTypes.Json;
             if (message.Body != null)
                 this.PathInfo = "/json/oneway/" + OperationName;
             

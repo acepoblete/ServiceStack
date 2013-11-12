@@ -2,8 +2,9 @@
 using System.Linq;
 using Funq;
 using NUnit.Framework;
+using ServiceStack;
 using ServiceStack.Common;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface;
 using ServiceStack.WebHost.Endpoints;

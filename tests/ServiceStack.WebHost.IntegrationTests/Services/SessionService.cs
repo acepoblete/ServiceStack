@@ -1,10 +1,4 @@
-using System.Runtime.Serialization;
-using System.Web;
-using ServiceStack.CacheAccess;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface;
-using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
 
 namespace ServiceStack.WebHost.IntegrationTests.Services
 {
@@ -25,25 +19,9 @@ namespace ServiceStack.WebHost.IntegrationTests.Services
 		public CustomSession UnTyped { get; set; }
 	}
 
-	public class SessionService
-		: ServiceBase<Session>
+	public class SessionService : ServiceInterface.Service
 	{
-		//public ISessionFactory SessionFactory { get; set; }
-
-		//private ISession session;
-		//public ISession Session
-		//{
-		//    get
-		//    {
-		//        return session ?? (session =
-		//            SessionFactory.GetOrCreateSession(
-		//                new HttpRequestWrapper(null, HttpContext.Current.Request),
-		//                new HttpResponseWrapper(HttpContext.Current.Response)
-		//            ));
-		//    }
-		//}
-
-		protected override object Run(Session request)
+        public object Any(Session request)
 		{
 			var untyped = Session["untyped"] as CustomSession ?? new CustomSession();			
 			var typed = Session.Get<CustomSession>("typed") ?? new CustomSession();

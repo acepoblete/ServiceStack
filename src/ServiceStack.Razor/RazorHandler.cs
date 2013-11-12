@@ -1,8 +1,8 @@
 using System.Net;
-using ServiceStack.Common.Web;
 using ServiceStack.Razor.Managers;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints.Support;
 
 namespace ServiceStack.Razor
@@ -22,7 +22,7 @@ namespace ServiceStack.Razor
 
         public override void ProcessRequest(IHttpRequest httpReq, IHttpResponse httpRes, string operationName)
         {
-            httpRes.ContentType = ContentType.Html;
+            httpRes.ContentType = MimeTypes.Html;
             if (RazorFormat == null)
                 RazorFormat = RazorFormat.Instance;
 

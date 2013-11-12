@@ -1,10 +1,11 @@
 using System;
-using ServiceStack.Common.Web;
 using ServiceStack.MiniProfiler;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints.Support;
+using ServiceStack.WebHost.Endpoints.Wrappers;
 
 namespace ServiceStack.WebHost.Endpoints
 {
@@ -13,7 +14,7 @@ namespace ServiceStack.WebHost.Endpoints
 		public GenericHandler(string contentType, EndpointAttributes handlerAttributes, Feature format)
 		{
 			this.HandlerContentType = contentType;
-			this.ContentTypeAttribute = ContentType.GetEndpointAttributes(contentType);
+			this.ContentTypeAttribute = ContentFormat.GetEndpointAttributes(contentType);
 			this.HandlerAttributes = handlerAttributes;
 			this.format = format;
 		}

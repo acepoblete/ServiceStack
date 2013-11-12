@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface.Auth;
 using ServiceStack.ServiceInterface.Providers;
@@ -69,7 +70,7 @@ namespace ServiceStack.ServiceInterface.Admin
             this.EnableRequestBodyTracking = false;
             this.ExcludeRequestDtoTypes = new[] { typeof(RequestLogs) };
             this.HideRequestBodyForRequestDtoTypes = new[] {
-                typeof(Auth.Auth), typeof(Registration)
+                typeof(Authenticate), typeof(Register)
             };
         }
 

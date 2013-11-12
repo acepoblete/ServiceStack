@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using ServiceStack.ServiceClient.Web;
-using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface.ServiceModel;
-using ServiceStack.Text;
+using ServiceStack.Server;
+using ServiceStack.Clients;
 using ServiceStack.WebHost.IntegrationTests.Tests;
 
 namespace ServiceStack.WebHost.IntegrationTests.Services
@@ -43,13 +41,13 @@ namespace ServiceStack.WebHost.IntegrationTests.Services
     }
 
     [IocRequestFilter]
-    public class IocScopeService : IService<IocScope>, IDisposable
+    public class IocScopeService : IService, IDisposable
     {
         public FunqRequestScope FunqRequestScope { get; set; }
         public FunqSingletonScope FunqSingletonScope { get; set; }
         public FunqNoneScope FunqNoneScope { get; set; }
 
-        public object Execute(IocScope request)
+        public object Any(IocScope request)
         {
             var response = new IocScopeResponse {
                 Results = {

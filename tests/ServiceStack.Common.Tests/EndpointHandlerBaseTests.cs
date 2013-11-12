@@ -1,9 +1,10 @@
 ﻿using System;
 using NUnit.Framework;
-using ServiceStack.Common.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface.Testing;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Text;
+using ServiceStack.Web;
 
 namespace ServiceStack.Common.Tests
 {
@@ -12,7 +13,8 @@ namespace ServiceStack.Common.Tests
     {
         public IHttpRequest CreateRequest(string userHostAddress)
         {
-            var httpReq = new MockHttpRequest("test", HttpMethods.Get, ContentType.Json, "/", null, null, null) {
+            var httpReq = new MockHttpRequest("test", HttpMethods.Get, MimeTypes.Json, "/", null, null, null)
+            {
                 UserHostAddress = userHostAddress
             };
             return httpReq;

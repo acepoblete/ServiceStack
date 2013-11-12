@@ -1,10 +1,11 @@
 ﻿using Moq;
 using NUnit.Framework;
-using ServiceStack.Common.Web;
 using ServiceStack.FluentValidation;
 using ServiceStack.ServiceInterface;
 using ServiceStack.ServiceInterface.Auth;
 using ServiceStack.ServiceInterface.Testing;
+using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
 
 namespace ServiceStack.Common.Tests.OAuth
@@ -20,7 +21,7 @@ namespace ServiceStack.Common.Tests.OAuth
             if (_appHost == null)
             {
                 _appHost = new BasicAppHost();
-                var authService = new AuthService();
+                var authService = new AuthenticateService();
                 authService.SetAppHost(_appHost);
                 _appHost.Container.Register(authService);
                 _appHost.Container.Register<IAuthSession>(authUserSession);
@@ -31,7 +32,7 @@ namespace ServiceStack.Common.Tests.OAuth
         [TestFixtureSetUp]
 		public void TestFixtureSetUp()
 		{
-            AuthService.Init(() => authUserSession, new CredentialsAuthProvider());            
+            AuthenticateService.Init(() => authUserSession, new CredentialsAuthProvider());            
 		}
 
 		public static IUserAuthRepository GetStubRepo()
@@ -45,8 +46,8 @@ namespace ServiceStack.Common.Tests.OAuth
 			return mock.Object;
 		}
 
-		public static RegistrationService GetRegistrationService(
-			AbstractValidator<Registration> validator = null, 
+		public static RegisterService GetRegistrationService(
+			AbstractValidator<Register> validator = null, 
 			IUserAuthRepository authRepo=null,
 			string contentType=null)
 		{
@@ -56,7 +57,7 @@ namespace ServiceStack.Common.Tests.OAuth
 				requestContext.ResponseContentType = contentType;
 			}
 		    var userAuthRepository = authRepo ?? GetStubRepo();
-		    var service = new RegistrationService {
+		    var service = new RegisterService {
                 RegistrationValidator = validator ?? new RegistrationValidator { UserAuthRepo = userAuthRepository },
 				UserAuthRepo = userAuthRepository,
 				RequestContext = requestContext,
@@ -74,7 +75,7 @@ namespace ServiceStack.Common.Tests.OAuth
 		{
 			var service = GetRegistrationService();
 
-	        var response = PostRegistrationError(service, new Registration());
+	        var response = PostRegistrationError(service, new Register());
 			var errors = response.GetFieldErrors();
 
 			Assert.That(errors.Count, Is.EqualTo(3));
@@ -86,9 +87,9 @@ namespace ServiceStack.Common.Tests.OAuth
 			Assert.That(errors[2].FieldName, Is.EqualTo("Email"));
 		}
 
-	    private static HttpError PostRegistrationError(RegistrationService service, Registration registration)
+	    private static HttpError PostRegistrationError(RegisterService service, Register register)
 	    {
-	        var response = (HttpError) service.RunAction(registration, (svc, req) => svc.Post(req));
+	        var response = (HttpError) service.RunAction(register, (svc, req) => svc.Post(req));
 	        return response;
 	    }
 
@@ -97,7 +98,7 @@ namespace ServiceStack.Common.Tests.OAuth
 		{
 			var service = GetRegistrationService(new FullRegistrationValidator());
 
-            var response = PostRegistrationError(service, new Registration());
+            var response = PostRegistrationError(service, new Register());
             var errors = response.GetFieldErrors();
 
 			Assert.That(errors.Count, Is.EqualTo(4));
@@ -120,12 +121,12 @@ namespace ServiceStack.Common.Tests.OAuth
 
 			var response = service.Post(request);
 
-			Assert.That(response as RegistrationResponse, Is.Not.Null);
+			Assert.That(response as RegisterResponse, Is.Not.Null);
 		}
 
-		public static Registration GetValidRegistration(bool autoLogin=false)
+		public static Register GetValidRegistration(bool autoLogin=false)
 		{
-			var request = new Registration {
+			var request = new Register {
 				DisplayName = "DisplayName",
 				Email = "my@email.com",
 				FirstName = "FirstName",
@@ -145,12 +146,12 @@ namespace ServiceStack.Common.Tests.OAuth
 			mock.Expect(x => x.GetUserAuthByUserName(It.IsAny<string>()))
 				.Returns(mockExistingUser);
 
-			var service = new RegistrationService {
+			var service = new RegisterService {
 				RegistrationValidator = new RegistrationValidator { UserAuthRepo = mock.Object },
 				UserAuthRepo = mock.Object,
             };
 
-			var request = new Registration {
+			var request = new Register {
 				DisplayName = "DisplayName",
 				Email = "my@email.com",
 				FirstName = "FirstName",
@@ -172,7 +173,7 @@ namespace ServiceStack.Common.Tests.OAuth
 		[Test]
 		public void Registration_with_Html_ContentType_And_Continue_returns_302_with_Location()
 		{
-			var service = GetRegistrationService(null, null, ContentType.Html);
+            var service = GetRegistrationService(null, null, MimeTypes.Html);
 
 			var request = GetValidRegistration();
 			request.Continue = "http://localhost/home";
@@ -187,7 +188,7 @@ namespace ServiceStack.Common.Tests.OAuth
 		[Test]
 		public void Registration_with_EmptyString_Continue_returns_RegistrationResponse()
 		{
-			var service = GetRegistrationService(null, null, ContentType.Html);
+            var service = GetRegistrationService(null, null, MimeTypes.Html);
 
 			var request = GetValidRegistration();
 			request.Continue = string.Empty;
@@ -195,13 +196,13 @@ namespace ServiceStack.Common.Tests.OAuth
 			var response = service.Post(request);
 
 			Assert.That(response as HttpResult, Is.Null);
-			Assert.That(response as RegistrationResponse, Is.Not.Null);
+			Assert.That(response as RegisterResponse, Is.Not.Null);
 		}
 
 		[Test]
 		public void Registration_with_Json_ContentType_And_Continue_returns_RegistrationResponse_with_ReferrerUrl()
 		{
-			var service = GetRegistrationService(null, null, ContentType.Json);
+            var service = GetRegistrationService(null, null, MimeTypes.Json);
 
 			var request = GetValidRegistration();
 			request.Continue = "http://localhost/home";
@@ -209,8 +210,8 @@ namespace ServiceStack.Common.Tests.OAuth
 			var response = service.Post(request);
 
 			Assert.That(response as HttpResult, Is.Null);
-			Assert.That(response as RegistrationResponse, Is.Not.Null);
-			Assert.That(((RegistrationResponse)response).ReferrerUrl, Is.EqualTo("http://localhost/home"));
+			Assert.That(response as RegisterResponse, Is.Not.Null);
+			Assert.That(((RegisterResponse)response).ReferrerUrl, Is.EqualTo("http://localhost/home"));
 		}
 	}
 }

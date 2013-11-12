@@ -3,15 +3,15 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.CSharp;
-using ServiceStack.Common.Extensions;
-using ServiceStack.Common.Utils;
+using ServiceStack.Common;
 using ServiceStack.IO;
 using ServiceStack.Logging;
 using ServiceStack.Razor.Compilation;
 using ServiceStack.Razor.Managers.RazorGen;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Utils;
 
 namespace ServiceStack.Razor.Managers
 {
@@ -49,7 +49,7 @@ namespace ServiceStack.Razor.Managers
                             .Where(IsWatchedFile);
 
             // you can override IsWatchedFile to filter
-            files.ForEach(x => TrackPage(x));
+            files.Each(x => TrackPage(x));
         }
 
         public virtual RazorPage AddPage(string filePath)

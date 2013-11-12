@@ -6,9 +6,9 @@ using ServiceStack.Common;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
 using ServiceStack.Plugins.ProtoBuf;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
 using ServiceStack.ServiceInterface;
-using ServiceStack.ServiceInterface.ServiceModel;
+using ServiceStack.ServiceModel;
 using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Host;
 
@@ -68,9 +68,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 		public ResponseStatus ResponseStatus { get; set; }
 	}
 
-	public class ProtoBufEmailService : ServiceBase<ProtoBufEmail>
+	public class ProtoBufEmailService : ServiceInterface.Service
 	{
-		protected override object Run(ProtoBufEmail request)
+        public object Any(ProtoBufEmail request)
 		{
 			return request;
 		}

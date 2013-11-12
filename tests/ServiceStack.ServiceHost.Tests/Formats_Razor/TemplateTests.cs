@@ -4,12 +4,12 @@ using System.IO;
 using System.Text;
 using NUnit.Framework;
 using ServiceStack.Common;
-using ServiceStack.Common.Utils;
 using ServiceStack.Html;
 using ServiceStack.Razor;
 using ServiceStack.ServiceHost.Tests.Formats;
 using ServiceStack.ServiceInterface.Testing;
 using ServiceStack.Text;
+using ServiceStack.Utils;
 using ServiceStack.VirtualPath;
 
 namespace ServiceStack.ServiceHost.Tests.Formats_Razor
@@ -32,7 +32,7 @@ namespace ServiceStack.ServiceHost.Tests.Formats_Razor
         public List<string> Labels { get; set; }
     }
 
-    public class CustomViewBase<T> : ViewPage<T> where T : class
+    public class CustomViewBase<T> : ViewPage<T>
     {
         public CustomMarkdownHelper Ext = new CustomMarkdownHelper();
         public ExternalProductHelper Prod = new ExternalProductHelper();

@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using ServiceStack.Configuration;
 using ServiceStack.Html;
 using ServiceStack.IO;
-using ServiceStack.ServiceHost;
+using ServiceStack.Server;
 
 namespace ServiceStack.WebHost.Endpoints
 {
@@ -45,7 +46,7 @@ namespace ServiceStack.WebHost.Endpoints
 		/// <summary>
 		/// Register custom ContentType serializers
 		/// </summary>
-		IContentTypeFilter ContentTypeFilters { get; }
+		IContentTypes ContentTypeses { get; }
 		
         /// <summary>
         /// Add Request Filters, to be applied before the dto is deserialized
@@ -55,12 +56,12 @@ namespace ServiceStack.WebHost.Endpoints
 		/// <summary>
 		/// Add Request Filters
 		/// </summary>
-		List<Action<IHttpRequest, IHttpResponse, object>> RequestFilters { get; }
+		List<Action<IHttpRequest, IHttpResponse, object>> GlobalRequestFilters { get; }
 		
 		/// <summary>
 		/// Add Response Filters
 		/// </summary>
-		List<Action<IHttpRequest, IHttpResponse, object>> ResponseFilters { get; }
+		List<Action<IHttpRequest, IHttpResponse, object>> GlobalResponseFilters { get; }
 
 		/// <summary>
 		/// Add alternative HTML View Engines

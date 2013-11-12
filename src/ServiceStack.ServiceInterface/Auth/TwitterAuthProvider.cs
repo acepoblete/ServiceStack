@@ -6,12 +6,16 @@ using ServiceStack.Text;
 
 namespace ServiceStack.ServiceInterface.Auth
 {
+    /// <summary>
+    /// Create an app at https://dev.twitter.com/apps to get your ConsumerKey and ConsumerSecret for your app.
+    /// The Callback URL for your app should match the CallbackUrl provided.
+    /// </summary>
     public class TwitterAuthProvider : OAuthProvider
     {
         public const string Name = "twitter";
         public static string Realm = "https://api.twitter.com/";
 
-        public TwitterAuthProvider(IResourceManager appSettings)
+        public TwitterAuthProvider(IAppSettings appSettings)
             : base(appSettings, Realm, Name) {}
 
         protected override void LoadUserAuthInfo(AuthUserSession userSession, IOAuthTokens tokens, Dictionary<string, string> authInfo)

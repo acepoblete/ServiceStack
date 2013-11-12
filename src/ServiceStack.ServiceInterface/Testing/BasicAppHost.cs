@@ -5,10 +5,10 @@ using System.Reflection;
 using Funq;
 using ServiceStack.Html;
 using ServiceStack.IO;
+using ServiceStack.Server;
 using ServiceStack.VirtualPath;
 using ServiceStack.ServiceHost;
 using ServiceStack.WebHost.Endpoints;
-using ServiceStack.WebHost.Endpoints.Extensions;
 
 namespace ServiceStack.ServiceInterface.Testing
 {
@@ -18,8 +18,8 @@ namespace ServiceStack.ServiceInterface.Testing
         {
             this.Container = new Container();
             this.PreRequestFilters = new List<Action<IHttpRequest, IHttpResponse>>();
-            this.RequestFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
-            this.ResponseFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
+            this.GlobalRequestFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
+            this.GlobalResponseFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
             this.ViewEngines = new List<IViewEngine>();
             this.CatchAllHandlers = new List<HttpHandlerResolverDelegate>();
             VirtualPathProvider = new FileSystemVirtualPathProvider(this, "~".MapServerPath());
@@ -48,13 +48,13 @@ namespace ServiceStack.ServiceInterface.Testing
 
         public Container Container { get; set; }
 
-        public IContentTypeFilter ContentTypeFilters { get; set; }
+        public IContentTypes ContentTypeses { get; set; }
 
         public List<Action<IHttpRequest, IHttpResponse>> PreRequestFilters { get; set; }
 
-        public List<Action<IHttpRequest, IHttpResponse, object>> RequestFilters { get; set; }
+        public List<Action<IHttpRequest, IHttpResponse, object>> GlobalRequestFilters { get; set; }
 
-        public List<Action<IHttpRequest, IHttpResponse, object>> ResponseFilters { get; set; }
+        public List<Action<IHttpRequest, IHttpResponse, object>> GlobalResponseFilters { get; set; }
 
         public List<IViewEngine> ViewEngines { get; set; }
 

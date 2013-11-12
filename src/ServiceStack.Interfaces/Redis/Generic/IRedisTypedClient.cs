@@ -12,8 +12,10 @@
 
 using System;
 using System.Collections.Generic;
-using ServiceStack.DataAccess;
-using ServiceStack.DesignPatterns.Model;
+using ServiceStack.Data;
+using ServiceStack.Model;
+using ServiceStack.Model;
+
 #if WINDOWS_PHONE
 using ServiceStack.Text.WP;
 #endif
@@ -21,7 +23,7 @@ using ServiceStack.Text.WP;
 namespace ServiceStack.Redis.Generic
 {
 	public interface IRedisTypedClient<T>
-		: IBasicPersistenceProvider<T>
+		: IEntityStore<T>
 	{
 		IHasNamed<IRedisList<T>> Lists { get; set; }
 		IHasNamed<IRedisSet<T>> Sets { get; set; }

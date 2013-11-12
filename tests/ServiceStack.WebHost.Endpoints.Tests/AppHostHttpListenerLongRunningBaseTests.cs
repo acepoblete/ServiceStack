@@ -5,10 +5,10 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using NUnit.Framework;
-using ServiceStack.Common.Web;
+using ServiceStack.Common;
 using ServiceStack.Logging;
 using ServiceStack.Logging.Support.Logging;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
 using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Host;
 
@@ -91,7 +91,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
         [Test]
         public void Can_call_jsv_debug_on_GetFactorial_WebService()
         {
-            const string url = ListeningOn + "jsv/syncreply/GetFactorial?ForNumber=3&debug=true";
+            const string url = ListeningOn + "jsv/reply/GetFactorial?ForNumber=3&debug=true";
             var contents = url.GetStringFromUrl();
 
 
@@ -162,8 +162,8 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             webReq.Accept = "*/*";
             using (var webRes = webReq.GetResponse())
             {
-                Assert.That(webRes.ContentType, Is.StringStarting(ContentType.Json));
-                response = webRes.DownloadText();
+                Assert.That(webRes.ContentType, Is.StringStarting(MimeTypes.Json));
+                response = webRes.ReadToEnd();
             }
 
             Assert.That(response, Is.Not.Null, "No response received");

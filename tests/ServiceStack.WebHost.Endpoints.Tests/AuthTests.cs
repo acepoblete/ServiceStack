@@ -5,18 +5,17 @@ using System.Threading;
 using System.Web;
 using Funq;
 using NUnit.Framework;
-using ServiceStack.CacheAccess;
-using ServiceStack.CacheAccess.Providers;
+using ServiceStack.Caching;
+using ServiceStack.Clients;
 using ServiceStack.Common.Tests.ServiceClient.Web;
-using ServiceStack.Common.Utils;
-using ServiceStack.Common.Web;
-using ServiceStack.Service;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Server;
+using ServiceStack.Clients;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface;
 using ServiceStack.ServiceInterface.Auth;
-using ServiceStack.ServiceInterface.ServiceModel;
+using ServiceStack.ServiceModel;
 using ServiceStack.Text;
+using ServiceStack.Utils;
 using ServiceStack.WebHost.Endpoints.Tests.Support.Services;
 using ServiceStack.WebHost.IntegrationTests.Services;
 using System.Collections.Generic;
@@ -24,7 +23,7 @@ using System.Collections.Generic;
 namespace ServiceStack.WebHost.Endpoints.Tests
 {
     [Route("/secured")]
-    public class Secured
+    public class Secured : IReturn<SecuredResponse>
     {
         public string Name { get; set; }
     }
@@ -84,9 +83,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests
     }
 
     [RequiredRole("TheRole")]
-    public class RequiresRoleService : ServiceBase<RequiresRole>
+    public class RequiresRoleService : ServiceInterface.Service
     {
-        protected override object Run(RequiresRole request)
+        public object Any(RequiresRole request)
         {
             return new RequiresRoleResponse { Result = request.Name };
         }
@@ -115,9 +114,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests
     }
 
     [RequiresAnyRole("TheRole", "TheRole2")]
-    public class RequiresAnyRoleService : ServiceBase<RequiresAnyRole>
+    public class RequiresAnyRoleService : ServiceInterface.Service
     {
-        protected override object Run(RequiresAnyRole request)
+        public object Any(RequiresAnyRole request)
         {
             return new RequiresAnyRoleResponse { Result = request.Roles };
         }
@@ -191,12 +190,12 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             this.Provider = "custom";
         }
 
-        public override bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Auth request = null)
+        public override bool IsAuthorized(IAuthSession session, IOAuthTokens tokens, Authenticate request = null)
         {
             return false;
         }
 
-        public override object Authenticate(IServiceBase authService, IAuthSession session, Auth request)
+        public override object Authenticate(IServiceBase authService, IAuthSession session, Authenticate request)
         {
             throw new NotImplementedException();
         }
@@ -352,7 +351,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
 
         IServiceClient GetHtmlClient()
         {
-            return new HtmlServiceClient(ListeningOn);
+            return new HtmlServiceClient(ListeningOn) {BaseUri = ListeningOn};
         }
 
         IServiceClient GetClientWithUserPassword()
@@ -388,7 +387,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             try
             {
                 var client = GetClient();
-                var authResponse = client.Send(new Auth
+                var authResponse = client.Send(new Authenticate
                 {
                     provider = CredentialsAuthProvider.Name,
                     UserName = "user",
@@ -478,7 +477,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             {
                 var client = (ServiceClientBase)GetClientWithUserPassword();
                 client.AlwaysSendBasicAuthHeader = true;
-                client.LocalHttpWebRequestFilter = req =>
+                client.RequestFilter = req =>
                 {
                     bool hasAuthentication = false;
                     foreach (var key in req.Headers.Keys)
@@ -506,7 +505,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             {
                 var client = GetClient();
 
-                var authResponse = client.Send(new Auth
+                var authResponse = client.Send(new Authenticate
                 {
                     provider = CredentialsAuthProvider.Name,
                     UserName = "user",
@@ -534,7 +533,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             var request = new Secured { Name = "test" };
             SecureResponse response = null;
 
-            client.SendAsync<AuthResponse>(new Auth
+            client.SendAsync<AuthenticateResponse>(new Authenticate
             {
                 provider = CredentialsAuthProvider.Name,
                 UserName = "user",
@@ -664,7 +663,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             {
                 var client = GetClient();
 
-                var authResponse = client.Send<AuthResponse>(new Auth
+                var authResponse = client.Send<AuthenticateResponse>(new Authenticate
                 {
                     provider = CredentialsAuthProvider.Name,
                     UserName = "user",
@@ -728,7 +727,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             var client = (ServiceClientBase)GetHtmlClient();
             client.AllowAutoRedirect = false;
             string lastResponseLocationHeader = null;
-            client.LocalHttpWebResponseFilter = response =>
+            client.ResponseFilter = response =>
             {
                 lastResponseLocationHeader = response.Headers["Location"];
             };
@@ -746,7 +745,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             var client = (ServiceClientBase)GetHtmlClient();
             client.AllowAutoRedirect = false;
             string lastResponseLocationHeader = null;
-            client.LocalHttpWebResponseFilter = response =>
+            client.ResponseFilter = response =>
             {
                 lastResponseLocationHeader = response.Headers["Location"];
             };
@@ -767,17 +766,44 @@ namespace ServiceStack.WebHost.Endpoints.Tests
         }
 
         [Test]
+        public void Html_clients_receive_secured_url_including_query_string_within_login_page_redirect_query_string()
+        {
+            var client = (ServiceClientBase)GetHtmlClient();
+            client.AllowAutoRedirect = false;
+            string lastResponseLocationHeader = null;
+            client.ResponseFilter = response =>
+            {
+                lastResponseLocationHeader = response.Headers["Location"];
+            };
+
+            var request = new Secured { Name = "test" };
+            // Perform a GET so that the Name DTO field is encoded as query string.
+            client.Get(request);
+
+            var locationUri = new Uri(lastResponseLocationHeader);
+            var locationUriQueryString = HttpUtility.ParseQueryString(locationUri.Query);
+            var redirectQueryItem = locationUriQueryString["redirect"];
+            var redirectUri = new Uri(redirectQueryItem);
+
+            // Should contain the url attempted to access before the redirect to the login page,
+            // including the 'Name=test' query string.
+            var redirectUriQueryString = HttpUtility.ParseQueryString(redirectUri.Query);
+            Assert.That(redirectUriQueryString.AllKeys, Contains.Item("name"));
+            Assert.That(redirectUriQueryString["name"], Is.EqualTo("test"));
+        }
+
+        [Test]
         public void Html_clients_receive_session_ReferrerUrl_on_successful_authentication()
         {
             var client = (ServiceClientBase)GetHtmlClient();
             client.AllowAutoRedirect = false;
             string lastResponseLocationHeader = null;
-            client.LocalHttpWebResponseFilter = response =>
+            client.ResponseFilter = response =>
             {
                 lastResponseLocationHeader = response.Headers["Location"];
             };
 
-            client.Send(new Auth
+            client.Send(new Authenticate
             {
                 provider = CredentialsAuthProvider.Name,
                 UserName = UserNameWithSessionRedirect,
@@ -792,7 +818,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
         {
             var client = GetClient();
 
-            var authRequest = new Auth
+            var authRequest = new Authenticate
             {
                 provider = CredentialsAuthProvider.Name,
                 UserName = UserName,
@@ -811,7 +837,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
         {
             var client = GetClient();
 
-            var authRequest = new Auth
+            var authRequest = new Authenticate
             {
                 provider = CredentialsAuthProvider.Name,
                 UserName = EmailBasedUsername,
@@ -828,7 +854,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
         {
             var client = GetClient();
 
-            var authRequest = new Auth
+            var authRequest = new Authenticate
             {
                 provider = CredentialsAuthProvider.Name,
                 UserName = EmailBasedUsername,
@@ -974,7 +1000,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests
             WebHeaderCollection headers = null;
             var client = GetClientWithUserPassword();
             ((ServiceClientBase)client).AlwaysSendBasicAuthHeader = true;
-            ((ServiceClientBase)client).LocalHttpWebResponseFilter = x => headers = x.Headers;
+            ((ServiceClientBase)client).ResponseFilter = x => headers = x.Headers;
             var response = client.Send<CustomAuthAttrResponse>(new CustomAuthAttr() { Name = "Hi You" });
             Assert.That(response.Result, Is.EqualTo("Hi You"));
             Assert.That(

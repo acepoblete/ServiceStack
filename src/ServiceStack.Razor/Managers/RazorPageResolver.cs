@@ -5,11 +5,10 @@ using System.Net;
 using System.Text;
 using System.Web;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
 using ServiceStack.Html;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
 using ServiceStack.WebHost.Endpoints.Support;
 
 namespace ServiceStack.Razor.Managers
@@ -83,10 +82,10 @@ namespace ServiceStack.Razor.Managers
         /// </summary>
         public override void ProcessRequest(IHttpRequest httpReq, IHttpResponse httpRes, string operationName)
         {
-            httpRes.ContentType = ContentType.Html;
+            httpRes.ContentType = MimeTypes.Html;
 
             ResolveAndExecuteRazorPage(httpReq, httpRes, null);
-            httpRes.EndServiceStackRequest(skipHeaders: true);
+            httpRes.EndRequest(skipHeaders: true);
         }
 
         /// <summary>
@@ -110,7 +109,7 @@ namespace ServiceStack.Razor.Managers
 
             ResolveAndExecuteRazorPage(httpReq, httpRes, dto, existingRazorPage);
 
-            httpRes.EndServiceStackRequest();
+            httpRes.EndRequest();
             return true;
         }
 
@@ -136,27 +135,28 @@ namespace ServiceStack.Razor.Managers
                 return null;
             }
 
+            var page = CreateRazorPageInstance(httpReq, httpRes, model, razorPage);
+
+            var includeLayout = !(httpReq.GetParam(QueryStringFormatKey) ?? "").Contains(NoTemplateFormatValue);
+            if (includeLayout)
+            {
+                var result = ExecuteRazorPageWithLayout(httpReq, httpRes, model, page, () => 
+                    httpReq.GetItem(LayoutKey) as string
+                    ?? page.Layout
+                    ?? DefaultLayoutName);
+
+                using (var writer = new StreamWriter(httpRes.OutputStream, UTF8EncodingWithoutBom))
+                {
+                    writer.Write(result.Item2);
+                }
+                return result.Item1;
+            }
+
             using (var writer = new StreamWriter(httpRes.OutputStream, UTF8EncodingWithoutBom))
             {
-                var page = CreateRazorPageInstance(httpReq, httpRes, model, razorPage);
-
-                var includeLayout = !(httpReq.GetParam(QueryStringFormatKey) ?? "").Contains(NoTemplateFormatValue);
-                if (includeLayout)
-                {
-                    var result = ExecuteRazorPageWithLayout(httpReq, httpRes, model, page, () =>
-                    {
-                        return httpReq.GetItem(LayoutKey) as string
-                                       ?? page.Layout
-                                       ?? DefaultLayoutName;
-                    });
-
-                    writer.Write(result.Item2);
-                    return result.Item1;
-                }
-
                 page.WriteTo(writer);
-                return page;
             }
+            return page;
         }
 
         private Tuple<IRazorView, string> ExecuteRazorPageWithLayout(IHttpRequest httpReq, IHttpResponse httpRes, object model, IRazorView page, Func<string> layout)

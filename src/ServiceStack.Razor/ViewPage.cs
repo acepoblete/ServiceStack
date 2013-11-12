@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using ServiceStack.Html;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 
 namespace ServiceStack.Razor
@@ -36,7 +37,7 @@ namespace ServiceStack.Razor
         }
 	}
 
-    public abstract class ViewPage<TModel> : ViewPageBase<TModel>, IRazorView where TModel : class
+    public abstract class ViewPage<TModel> : ViewPageBase<TModel>, IRazorView
     {
         public HtmlHelper<TModel> Html = new HtmlHelper<TModel>();
 

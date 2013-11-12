@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
 using ServiceStack.Logging;
 using ServiceStack.Messaging;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Server;
+using ServiceStack.Clients;
 using ServiceStack.Text;
+using ServiceStack.Utils;
 using ServiceStack.WebHost.Endpoints;
 
 namespace ServiceStack.ServiceHost
@@ -152,10 +153,13 @@ namespace ServiceStack.ServiceHost
         {
             var useAppHost = GetAppHost();
 
-            //TODO workout validation errors
-            var errorResponse = useAppHost != null && useAppHost.ServiceExceptionHandler != null
-                ? useAppHost.ServiceExceptionHandler(request, ex)
-                : DtoUtils.HandleException(useAppHost, request, ex);
+            object errorResponse = null;
+
+            if (useAppHost != null && useAppHost.ServiceExceptionHandler != null)
+                errorResponse = useAppHost.ServiceExceptionHandler(request, ex);
+
+            if (errorResponse == null)
+                errorResponse = DtoUtils.HandleException(useAppHost, request, ex);
 
             AfterEachRequest(requestContext, request, errorResponse ?? ex);
             

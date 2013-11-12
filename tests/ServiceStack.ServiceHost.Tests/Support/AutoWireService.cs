@@ -1,4 +1,5 @@
 using System.Runtime.Serialization;
+using ServiceStack.Server;
 
 namespace ServiceStack.ServiceHost.Tests.Support
 {
@@ -12,8 +13,7 @@ namespace ServiceStack.ServiceHost.Tests.Support
 		public IBar Bar { get; set; }
 	}
 
-	public class AutoWireService
-		: IService<AutoWire>
+	public class AutoWireService : IService
 	{
 		private readonly IFoo foo;
 
@@ -31,7 +31,7 @@ namespace ServiceStack.ServiceHost.Tests.Support
 			this.foo = foo;
 		}
 
-		public object Execute(AutoWire request)
+		public object Any(AutoWire request)
 		{
 			return new AutoWireResponse { Foo = foo, Bar = Bar };
 		}

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Linq;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface.Auth;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Web;
+using ServiceStack.WebHost.Endpoints;
+using ServiceStack.WebHost.Endpoints.Wrappers;
 
 namespace ServiceStack.ServiceInterface
 {
@@ -53,10 +55,11 @@ namespace ServiceStack.ServiceInterface
 
         public override void Execute(IHttpRequest req, IHttpResponse res, object requestDto)
         {
-            if (AuthService.AuthProviders == null) throw new InvalidOperationException("The AuthService must be initialized by calling "
-                 + "AuthService.Init to use an authenticate attribute");
+            if (AuthenticateService.AuthProviders == null) 
+                throw new InvalidOperationException(
+                    "The AuthService must be initialized by calling AuthService.Init to use an authenticate attribute");
 
-            var matchingOAuthConfigs = AuthService.AuthProviders.Where(x =>
+            var matchingOAuthConfigs = AuthenticateService.AuthProviders.Where(x =>
                 this.Provider.IsNullOrEmpty()
                 || x.Provider == this.Provider).ToList();
 
@@ -64,7 +67,7 @@ namespace ServiceStack.ServiceInterface
             {
                 res.WriteError(req, requestDto, "No OAuth Configs found matching {0} provider"
                     .Fmt(this.Provider ?? "any"));
-                res.EndServiceStackRequest();
+                res.EndRequest();
                 return;
             }
 
@@ -85,13 +88,13 @@ namespace ServiceStack.ServiceInterface
 
         protected bool DoHtmlRedirectIfConfigured(IHttpRequest req, IHttpResponse res, bool includeRedirectParam = false)
         {
-            var htmlRedirect = this.HtmlRedirect ?? AuthService.HtmlRedirect;
-            if (htmlRedirect != null && req.ResponseContentType.MatchesContentType(ContentType.Html))
+            var htmlRedirect = this.HtmlRedirect ?? AuthenticateService.HtmlRedirect;
+            if (htmlRedirect != null && req.ResponseContentType.MatchesContentType(MimeTypes.Html))
             {
                 var url = req.ResolveAbsoluteUrl(htmlRedirect);
                 if (includeRedirectParam)
                 {
-                    var absoluteRequestPath = req.ResolveAbsoluteUrl("~" + req.PathInfo);
+                    var absoluteRequestPath = req.ResolveAbsoluteUrl("~" + req.RawUrl);
                     url = url.AddQueryParam("redirect", absoluteRequestPath);
                 }
 
@@ -110,9 +113,9 @@ namespace ServiceStack.ServiceInterface
             var userPass = req.GetBasicAuthUserAndPassword();
             if (userPass != null)
             {
-                var authService = req.TryResolve<AuthService>();
+                var authService = req.TryResolve<AuthenticateService>();
                 authService.RequestContext = new HttpRequestContext(req, res, null);
-                var response = authService.Post(new Auth.Auth {
+                var response = authService.Post(new Authenticate {
                     provider = BasicAuthProvider.Name,
                     UserName = userPass.Value.Key,
                     Password = userPass.Value.Value
@@ -127,9 +130,9 @@ namespace ServiceStack.ServiceInterface
             var digestAuth = req.GetDigestAuth();
             if (digestAuth != null)
             {
-                var authService = req.TryResolve<AuthService>();
+                var authService = req.TryResolve<AuthenticateService>();
                 authService.RequestContext = new HttpRequestContext(req, res, null);
-                var response = authService.Post(new Auth.Auth
+                var response = authService.Post(new Authenticate
                 {
                     provider = DigestAuthProvider.Name,
                     nonce = digestAuth["nonce"],

@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Funq;
-using ServiceStack.CacheAccess;
-using ServiceStack.CacheAccess.Providers;
-using ServiceStack.Common;
-using ServiceStack.Common.Web;
+using ServiceStack.Caching;
 using ServiceStack.Html;
 using ServiceStack.IO;
+using ServiceStack.Messaging;
 using ServiceStack.MiniProfiler;
+using ServiceStack.Serialization;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
+using ServiceStack.Text;
 using ServiceStack.VirtualPath;
-using ServiceStack.ServiceModel.Serialization;
-using ServiceStack.WebHost.Endpoints.Extensions;
 using ServiceStack.WebHost.Endpoints.Formats;
 using ServiceStack.WebHost.Endpoints.Support;
 using ServiceStack.WebHost.Endpoints.Utils;
@@ -23,7 +23,7 @@ namespace ServiceStack.WebHost.Endpoints
     {
         public static IAppHost AppHost { get; internal set; }
 
-        public static IContentTypeFilter ContentTypeFilter { get; set; }
+        public static IContentTypes ContentTypes { get; set; }
 
         public static List<Action<IHttpRequest, IHttpResponse>> RawRequestFilters { get; private set; }
 
@@ -33,8 +33,10 @@ namespace ServiceStack.WebHost.Endpoints
 
         public static List<IViewEngine> ViewEngines { get; set; }
 
+        //TODO: rename to UncaughtExceptionsHandler
         public static HandleUncaughtExceptionDelegate ExceptionHandler { get; set; }
 
+        //TODO: rename to ServiceExceptionsHandler
         public static HandleServiceExceptionDelegate ServiceExceptionHandler { get; set; }
 
         public static List<HttpHandlerResolverDelegate> CatchAllHandlers { get; set; }
@@ -51,7 +53,7 @@ namespace ServiceStack.WebHost.Endpoints
 
         private static void Reset()
         {
-            ContentTypeFilter = HttpResponseFilter.Instance;
+            ContentTypes = Web.ContentTypes.Instance;
             RawRequestFilters = new List<Action<IHttpRequest, IHttpResponse>>();
             RequestFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
             ResponseFilters = new List<Action<IHttpRequest, IHttpResponse, object>>();
@@ -152,7 +154,8 @@ namespace ServiceStack.WebHost.Endpoints
 
             if (ExceptionHandler == null)
             {
-                ExceptionHandler = (httpReq, httpRes, operationName, ex) => {
+                ExceptionHandler = (httpReq, httpRes, operationName, ex) =>
+                {
                     var errorMessage = String.Format("Error occured while Processing Request: {0}", ex.Message);
                     var statusCode = ex.ToStatusCode();
                     //httpRes.WriteToResponse always calls .Close in it's finally statement so 
@@ -183,6 +186,13 @@ namespace ServiceStack.WebHost.Endpoints
                 {
                     Container.Register<ICacheClient>(new MemoryCacheClient());
                 }
+            }
+
+            var registeredMqService = AppHost.TryResolve<IMessageService>();
+            var registeredMqFactory = AppHost.TryResolve<IMessageFactory>();
+            if (registeredMqService != null && registeredMqFactory == null)
+            {
+                Container.Register(c => registeredMqService.MessageFactory);
             }
 
             ReadyAt = DateTime.UtcNow;
@@ -227,13 +237,13 @@ namespace ServiceStack.WebHost.Endpoints
             if (!String.IsNullOrEmpty(specifiedContentType))
                 config.DefaultContentType = specifiedContentType;
             else if (String.IsNullOrEmpty(config.DefaultContentType))
-                config.DefaultContentType = ContentType.Json;
+                config.DefaultContentType = MimeTypes.Json;
 
             config.ServiceManager.AfterInit();
             ServiceManager = config.ServiceManager; //reset operations
         }
 
-        public static T GetPlugin<T>() where T : class, IPlugin 
+        public static T GetPlugin<T>() where T : class, IPlugin
         {
             return Plugins.FirstOrDefault(x => x is T) as T;
         }
@@ -278,6 +288,17 @@ namespace ServiceStack.WebHost.Endpoints
                 config = value;
                 ApplyConfigChanges();
             }
+        }
+
+        public static void AssertTestConfig(params Assembly[] assemblies)
+        {
+            if (Config != null)
+                return;
+
+            var config = EndpointHostConfig.Instance;
+            config.ServiceName = "Test Services";
+            config.ServiceManager = new ServiceManager(assemblies.Length == 0 ? new[] { Assembly.GetCallingAssembly() } : assemblies);
+            Config = config;
         }
 
         public static bool DebugMode
@@ -362,7 +383,7 @@ namespace ServiceStack.WebHost.Endpoints
 
             using (Profiler.Current.Step("Executing Response Filters"))
             {
-                var responseDto = response.ToResponseDto();
+                var responseDto = response.GetResponseDto();
                 var attributes = responseDto != null
                     ? FilterAttributeCache.GetResponseFilterAttributes(responseDto.GetType())
                     : null;

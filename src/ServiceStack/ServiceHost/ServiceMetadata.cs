@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using ServiceStack.Common;
+using ServiceStack.Server;
 using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints;
-using ServiceStack.WebHost.Endpoints.Extensions;
 
 namespace ServiceStack.ServiceHost
 {
@@ -207,7 +207,7 @@ namespace ServiceStack.ServiceHost
                 return true;
 
             Operation operation;
-            OperationNamesMap.TryGetValue(operationName.ToLower(), out operation);
+            OperationNamesMap.TryGetValue(operationName.ToLowerInvariant(), out operation);
             if (operation == null) return false;
 
             var canCall = HasImplementation(operation, format);

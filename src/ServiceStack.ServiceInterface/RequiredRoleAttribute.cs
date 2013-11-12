@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.ServiceInterface.Auth;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.Web;
+using ServiceStack.WebHost.Endpoints;
 
 namespace ServiceStack.ServiceInterface
 {
@@ -31,6 +32,9 @@ namespace ServiceStack.ServiceInterface
 
         public override void Execute(IHttpRequest req, IHttpResponse res, object requestDto)
         {
+            if (EndpointHost.Config.HasValidAuthSecret(req))
+                return;
+
             base.Execute(req, res, requestDto); //first check if session is authenticated
             if (res.IsClosed) return; //AuthenticateAttribute already closed the request (ie auth failed)
 
@@ -41,7 +45,7 @@ namespace ServiceStack.ServiceInterface
 
             res.StatusCode = (int)HttpStatusCode.Forbidden;
             res.StatusDescription = "Invalid Role";
-            res.EndServiceStackRequest();
+            res.EndRequest();
         }
 
         public bool HasAllRoles(IHttpRequest req, IAuthSession session, IUserAuthRepository userAuthRepo=null)
@@ -75,6 +79,9 @@ namespace ServiceStack.ServiceInterface
             if (requiredRoles.IsEmpty()) return;
 
             var req = requestContext.Get<IHttpRequest>();
+            if (EndpointHost.Config.HasValidAuthSecret(req))
+                return;
+
             var session = req.GetSession();
 
             if (session != null && requiredRoles.All(session.HasRole))

@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
-using ServiceStack.ServiceHost;
+using ServiceStack.Server;
 
-namespace ServiceStack.Common.Web
+namespace ServiceStack.Web
 {
     public class SerializationContext : IRequestContext
     {

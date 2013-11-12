@@ -1,13 +1,10 @@
 using System;
-using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using ServiceStack.Common.Reflection;
-using ServiceStack.DesignPatterns.Model;
+using ServiceStack.Model;
+using ServiceStack.Reflection;
 using ServiceStack.Text;
 
-namespace ServiceStack.Common.Utils
+namespace ServiceStack.Utils
 {
     public static class IdUtils<T>
     {

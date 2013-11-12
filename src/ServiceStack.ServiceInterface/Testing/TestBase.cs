@@ -4,16 +4,11 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using Funq;
-using ServiceStack.Common;
-using ServiceStack.Common.Utils;
-using ServiceStack.Common.Web;
-using ServiceStack.Service;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface.ServiceModel;
-using ServiceStack.ServiceModel;
 using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
 using ServiceStack.WebHost.Endpoints.Support;
 
@@ -36,13 +31,11 @@ namespace ServiceStack.ServiceInterface.Testing
             ServiceClientBaseUri = serviceClientBaseUri;
             ServiceAssemblies = serviceAssemblies;
 
-            var serviceManager = new ServiceManager(serviceAssemblies);
-
-            this.AppHost = new TestAppHost(serviceManager.Container, serviceAssemblies);
-
-            EndpointHost.ConfigureHost(this.AppHost, "TestBase", serviceManager);
+            this.AppHost = new TestAppHost(null, serviceAssemblies);
 
             EndpointHost.ServiceManager = this.AppHost.Config.ServiceManager;
+
+            EndpointHost.ConfigureHost(this.AppHost, "TestBase", EndpointHost.ServiceManager);
         }
 
         protected abstract void Configure(Funq.Container container);
@@ -449,8 +442,8 @@ namespace ServiceStack.ServiceInterface.Testing
             var httpHandler = GetHandler(httpMethod, pathInfo);
 
             var contentType = (formData != null && formData.Count > 0)
-                ? ContentType.FormUrlEncoded
-                : requestBody != null ? ContentType.Json : null;
+                ? MimeTypes.FormUrlEncoded
+                : requestBody != null ? MimeTypes.Json : null;
 
             var httpReq = new MockHttpRequest(
                     httpHandler.RequestName, httpMethod, contentType,
@@ -461,7 +454,15 @@ namespace ServiceStack.ServiceInterface.Testing
                 );
 
             var request = httpHandler.CreateRequest(httpReq, httpHandler.RequestName);
-            var response = httpHandler.GetResponse(httpReq, null, request);
+            object response;
+            try
+            {
+                response = httpHandler.GetResponse(httpReq, null, request);
+            }
+            catch (Exception ex)
+            {
+                response = DtoUtils.HandleException(AppHost, request, ex);
+            }
 
             var httpRes = response as IHttpResult;
             if (httpRes != null)
@@ -520,8 +521,8 @@ namespace ServiceStack.ServiceInterface.Testing
             var httpHandler = GetHandler(httpMethod, pathInfo);
 
             var contentType = (formData != null && formData.Count > 0)
-                ? ContentType.FormUrlEncoded
-                : requestBody != null ? ContentType.Json : null;
+                ? MimeTypes.FormUrlEncoded
+                : requestBody != null ? MimeTypes.Json : null;
 
             var httpReq = new MockHttpRequest(
                     httpHandler.RequestName, httpMethod, contentType,

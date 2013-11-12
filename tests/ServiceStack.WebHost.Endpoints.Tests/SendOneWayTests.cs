@@ -6,14 +6,11 @@ using System.Net;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
-using ServiceStack.Common.Web;
-using ServiceStack.Service;
+using ServiceStack.Clients;
 using ServiceStack.ServiceHost;
 using NUnit.Framework;
-using ServiceStack.ServiceClient.Web;
+using ServiceStack.Clients;
 using ServiceStack.ServiceInterface;
-using ServiceStack.CacheAccess;
-using ServiceStack.CacheAccess.Providers;
 using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints.Utils;
 

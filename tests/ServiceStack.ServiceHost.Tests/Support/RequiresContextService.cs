@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.Serialization;
+using ServiceStack.Server;
 
 namespace ServiceStack.ServiceHost.Tests.Support
 {
@@ -10,11 +11,11 @@ namespace ServiceStack.ServiceHost.Tests.Support
 	public class RequiresContextResponse { }
 
 	public class RequiresContextService 
-		: IService<RequiresContext>, IRequiresRequestContext
+		: IService, IRequiresRequestContext
 	{
 		public IRequestContext RequestContext { get;  set; }
 
-		public object Execute(RequiresContext requires)
+		public object Any(RequiresContext requires)
 		{
 			if (RequestContext == null)
 				throw new ArgumentNullException("RequestContext");

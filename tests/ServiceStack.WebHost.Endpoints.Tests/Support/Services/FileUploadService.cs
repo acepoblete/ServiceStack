@@ -1,12 +1,9 @@
 using System;
 using System.IO;
 using System.Runtime.Serialization;
-using ServiceStack.Common.Extensions;
-using ServiceStack.Common.Utils;
-using ServiceStack.Common.Web;
-using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface;
-using ServiceStack.ServiceInterface.ServiceModel;
+using ServiceStack.Text;
+using ServiceStack.Utils;
+using ServiceStack.Web;
 
 namespace ServiceStack.WebHost.Endpoints.Tests.Support.Services
 {
@@ -50,10 +47,9 @@ namespace ServiceStack.WebHost.Endpoints.Tests.Support.Services
         public int CustomerId { get; set; }
 	}
 
-	public class FileUploadService
-		: RestServiceBase<FileUpload>
+	public class FileUploadService : ServiceInterface.Service
 	{
-		public override object OnGet(FileUpload request)
+		public object Get(FileUpload request)
 		{
 			if (request.RelativePath.IsNullOrEmpty())
 				throw new ArgumentNullException("RelativePath");
@@ -66,7 +62,7 @@ namespace ServiceStack.WebHost.Endpoints.Tests.Support.Services
 			return result;
 		}
 
-		public override object OnPost(FileUpload request)
+		public object Post(FileUpload request)
 		{
 			if (this.RequestContext.Files.Length == 0)
 				throw new FileNotFoundException("UploadError", "No such file exists");

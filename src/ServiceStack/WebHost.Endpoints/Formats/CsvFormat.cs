@@ -1,7 +1,8 @@
 using System.IO;
-using ServiceStack.Common.Web;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
 using ServiceStack.Text;
+using ServiceStack.Web;
 
 namespace ServiceStack.WebHost.Endpoints.Formats
 {
@@ -10,13 +11,13 @@ namespace ServiceStack.WebHost.Endpoints.Formats
 		public void Register(IAppHost appHost)
 		{
 			//Register the 'text/csv' content-type and serializers (format is inferred from the last part of the content-type)
-			appHost.ContentTypeFilters.Register(ContentType.Csv,
+            appHost.ContentTypeses.Register(MimeTypes.Csv,
 				SerializeToStream, CsvSerializer.DeserializeFromStream);
 
 			//Add a response filter to add a 'Content-Disposition' header so browsers treat it natively as a .csv file
-			appHost.ResponseFilters.Add((req, res, dto) =>
+			appHost.GlobalResponseFilters.Add((req, res, dto) =>
 			{
-				if (req.ResponseContentType == ContentType.Csv)
+                if (req.ResponseContentType == MimeTypes.Csv)
 				{
 					res.AddHeader(HttpHeaders.ContentDisposition,
 						string.Format("attachment;filename={0}.csv", req.OperationName));

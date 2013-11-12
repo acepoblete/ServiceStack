@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -8,16 +9,15 @@ using System.Text;
 using System.Threading;
 using Funq;
 using ServiceStack.Common;
-using ServiceStack.Common.Web;
 using ServiceStack.Configuration;
 using ServiceStack.Html;
 using ServiceStack.IO;
 using ServiceStack.Logging;
+using ServiceStack.Serialization;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
-using ServiceStack.VirtualPath;
-using ServiceStack.ServiceModel.Serialization;
 using ServiceStack.Text;
-using ServiceStack.WebHost.Endpoints.Extensions;
+using ServiceStack.WebHost.Endpoints.Wrappers;
 
 namespace ServiceStack.WebHost.Endpoints.Support
 {
@@ -36,6 +36,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
 
 		protected HttpListener Listener;
 		protected bool IsStarted = false;
+	    protected string registeredReservedUrl = null;
 
 		private readonly DateTime startTime;
 
@@ -110,35 +111,56 @@ namespace ServiceStack.WebHost.Endpoints.Support
             }
         }
 
-		/// <summary>
-		/// Starts the Web Service
-		/// </summary>
-		/// <param name="urlBase">
-		/// A Uri that acts as the base that the server is listening on.
-		/// Format should be: http://127.0.0.1:8080/ or http://127.0.0.1:8080/somevirtual/
-		/// Note: the trailing slash is required! For more info see the
-		/// HttpListener.Prefixes property on MSDN.
-		/// </param>
 		public virtual void Start(string urlBase)
 		{
-			// *** Already running - just leave it in place
-			if (this.IsStarted)
-				return;
-
-			if (this.Listener == null)
-			{
-				this.Listener = new HttpListener();
-			}
-
-            EndpointHost.Config.ServiceStackHandlerFactoryPath = HttpListenerRequestWrapper.GetHandlerPathIfAny(urlBase);
-
-			this.Listener.Prefixes.Add(urlBase);
-
-			this.IsStarted = true;
-			this.Listener.Start();
-
-			ThreadPool.QueueUserWorkItem(Listen);
+		    Start(urlBase, Listen);
 		}
+
+        /// <summary>
+        /// Starts the Web Service
+        /// </summary>
+        /// <param name="urlBase">
+        /// A Uri that acts as the base that the server is listening on.
+        /// Format should be: http://127.0.0.1:8080/ or http://127.0.0.1:8080/somevirtual/
+        /// Note: the trailing slash is required! For more info see the
+        /// HttpListener.Prefixes property on MSDN.
+        /// </param>
+        protected void Start(string urlBase, WaitCallback listenCallback)
+	    {
+            // *** Already running - just leave it in place
+	        if (this.IsStarted)
+	            return;
+
+	        if (this.Listener == null)
+	            Listener = new HttpListener();
+
+	        EndpointHost.Config.ServiceStackHandlerFactoryPath = HttpListenerRequestWrapper.GetHandlerPathIfAny(urlBase);
+
+	        Listener.Prefixes.Add(urlBase);
+
+	        IsStarted = true;
+
+	        try
+	        {
+	            Listener.Start();
+	        }
+	        catch (HttpListenerException ex)
+	        {
+                if (Config.AllowAclUrlReservation && ex.ErrorCode == 5 && registeredReservedUrl == null)
+                {
+                    registeredReservedUrl = AddUrlReservationToAcl(urlBase);
+                    if (registeredReservedUrl != null)
+                    {
+                        Start(urlBase, listenCallback);
+                        return;
+                    }
+                }
+
+	            throw ex;
+	        }
+
+	        ThreadPool.QueueUserWorkItem(listenCallback);
+	    }
 
 	    private bool IsListening
 	    {
@@ -148,13 +170,13 @@ namespace ServiceStack.WebHost.Endpoints.Support
 		// Loop here to begin processing of new requests.
 		private void Listen(object state)
 		{
-			while (this.IsListening)
+			while (IsListening)
 			{
-				if (this.Listener == null) return;
+				if (Listener == null) return;
 
 				try
 				{
-					this.Listener.BeginGetContext(ListenerCallback, this.Listener);
+					Listener.BeginGetContext(ListenerCallback, Listener);
 					ListenForNextRequest.WaitOne();
 				}
 				catch (Exception ex)
@@ -162,7 +184,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
 					Log.Error("Listen()", ex);
 					return;
 				}
-				if (this.Listener == null) return;
+				if (Listener == null) return;
 			}
 		}
 
@@ -215,39 +237,53 @@ namespace ServiceStack.WebHost.Endpoints.Support
 
 			RaiseReceiveWebRequest(context);
 
-			try
-			{
-				this.ProcessRequest(context);
-			}
-			catch (Exception ex)
-			{
-				var error = string.Format("Error this.ProcessRequest(context): [{0}]: {1}", ex.GetType().Name, ex.Message);
-				Log.ErrorFormat(error);
+            try
+            {
+	            this.ProcessRequest(context);
+            }
+            catch (Exception ex)
+            {
+                var error = string.Format("Error this.ProcessRequest(context): [{0}]: {1}", ex.GetType().Name, ex.Message);
+                Log.ErrorFormat(error);
 
-				try
-				{
-					var sb = new StringBuilder();
-					sb.AppendLine("{");
-					sb.AppendLine("\"ResponseStatus\":{");
-					sb.AppendFormat(" \"ErrorCode\":{0},\n", ex.GetType().Name.EncodeJson());
-					sb.AppendFormat(" \"Message\":{0},\n", ex.Message.EncodeJson());
-					sb.AppendFormat(" \"StackTrace\":{0}\n", ex.StackTrace.EncodeJson());
-					sb.AppendLine("}");
-					sb.AppendLine("}");
+                try
+                {
+	                var errorResponse = new ErrorResponse
+	                {
+                        ResponseStatus = new ResponseStatus
+                        {
+                            ErrorCode = ex.GetType().Name,
+                            Message = ex.Message,
+                            StackTrace = ex.StackTrace,
+                        }
+	                };
 
-					context.Response.StatusCode = 500;
-					context.Response.ContentType = ContentType.Json;
-					var sbBytes = sb.ToString().ToUtf8Bytes();
-					context.Response.OutputStream.Write(sbBytes, 0, sbBytes.Length);
-					context.Response.Close();
-				}
-				catch (Exception errorEx)
-				{
-					error = string.Format("Error this.ProcessRequest(context)(Exception while writing error to the response): [{0}]: {1}", errorEx.GetType().Name, errorEx.Message);
-					Log.ErrorFormat(error);
+                    var operationName = context.Request.GetOperationName();
+                    var httpReq = new HttpListenerRequestWrapper(operationName, context.Request);
+                    var httpRes = new HttpListenerResponseWrapper(context.Response);
+	                var requestCtx = new HttpRequestContext(httpReq, httpRes, errorResponse);
+	                var contentType = requestCtx.ResponseContentType;
 
-				}
-			}
+	                var serializer = EndpointHost.ContentTypes.GetResponseSerializer(contentType);
+                    if (serializer == null)
+                    {
+                        contentType = EndpointHost.Config.DefaultContentType;
+                        serializer = EndpointHost.ContentTypes.GetResponseSerializer(contentType);
+                    }
+
+                    httpRes.StatusCode = 500;
+                    httpRes.ContentType = contentType;
+
+	                serializer(requestCtx, errorResponse, httpRes);
+
+                    httpRes.Close();
+                }
+                catch (Exception errorEx)
+                {
+	                error = string.Format("Error this.ProcessRequest(context)(Exception while writing error to the response): [{0}]: {1}", errorEx.GetType().Name, errorEx.Message);
+	                Log.ErrorFormat(error);
+                }
+            }
 
             //System.Diagnostics.Debug.WriteLine("End: " + requestNumber + " at " + DateTime.UtcNow);
 		}
@@ -269,6 +305,13 @@ namespace ServiceStack.WebHost.Endpoints.Support
 			try
 			{
 				this.Listener.Close();
+
+                // remove Url Reservation if one was made
+                if (registeredReservedUrl != null)
+                {
+                    RemoveUrlReservationFromAcl(registeredReservedUrl);
+                    registeredReservedUrl = null;
+                }
 			}
 			catch (HttpListenerException ex)
 			{
@@ -412,11 +455,11 @@ namespace ServiceStack.WebHost.Endpoints.Support
 			get { return EndpointHost.ServiceManager.ServiceController.RequestTypeFactoryMap; }
 		}
 
-		public IContentTypeFilter ContentTypeFilters
+		public IContentTypes ContentTypeses
 		{
 			get
 			{
-				return EndpointHost.ContentTypeFilter;
+				return EndpointHost.ContentTypes;
 			}
 		}
 
@@ -428,7 +471,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
 			}
 		}
 
-		public List<Action<IHttpRequest, IHttpResponse, object>> RequestFilters
+		public List<Action<IHttpRequest, IHttpResponse, object>> GlobalRequestFilters
 		{
 			get
 			{
@@ -436,7 +479,7 @@ namespace ServiceStack.WebHost.Endpoints.Support
 			}
 		}
 
-		public List<Action<IHttpRequest, IHttpResponse, object>> ResponseFilters
+		public List<Action<IHttpRequest, IHttpResponse, object>> GlobalResponseFilters
 		{
 			get
 			{
@@ -513,25 +556,96 @@ namespace ServiceStack.WebHost.Endpoints.Support
 
 		public void RegisterService(Type serviceType, params string[] atRestPaths)
 		{
-            var genericService = EndpointHost.Config.ServiceManager.RegisterService(serviceType);
-            if (genericService != null)
+            EndpointHost.Config.ServiceManager.RegisterService(serviceType);
+            var reqAttr = serviceType.GetCustomAttributes(true).OfType<DefaultRequestAttribute>().FirstOrDefault();
+            if (reqAttr != null)
             {
-                var requestType = genericService.GetGenericArguments()[0];
                 foreach (var atRestPath in atRestPaths)
                 {
-                    this.Routes.Add(requestType, atRestPath, null);
+                    this.Routes.Add(reqAttr.RequestType, atRestPath, null);
                 }
             }
-            else
+        }
+
+        /// <summary>
+        /// Reserves the specified URL for non-administrator users and accounts. 
+        /// http://msdn.microsoft.com/en-us/library/windows/desktop/cc307223(v=vs.85).aspx
+        /// </summary>
+        /// <returns>Reserved Url if the process completes successfully</returns>
+        public static string AddUrlReservationToAcl(string urlBase)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                return null;
+
+            try
             {
-                var reqAttr = serviceType.GetCustomAttributes(true).OfType<DefaultRequestAttribute>().FirstOrDefault();
-                if (reqAttr != null)
+                string cmd, args;
+
+                // use HttpCfg for windows versions before Version 6.0, else use NetSH
+                if (Environment.OSVersion.Version.Major < 6)
                 {
-                    foreach (var atRestPath in atRestPaths)
-                    {
-                        this.Routes.Add(reqAttr.RequestType, atRestPath, null);
-                    }
+                    var sid = System.Security.Principal.WindowsIdentity.GetCurrent().User;
+                    cmd = "httpcfg";
+                    args = string.Format(@"set urlacl /u {0} /a D:(A;;GX;;;""{1}"")", urlBase, sid);
                 }
+                else
+                {
+                    cmd = "netsh";
+                    args = string.Format(@"http add urlacl url={0} user={1}\{2} listen=yes", urlBase, Environment.UserDomainName, Environment.UserName);
+                }
+
+                var psi = new ProcessStartInfo(cmd, args)
+                {
+                    Verb = "runas",
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    UseShellExecute = true
+                };
+
+                Process.Start(psi).WaitForExit();
+
+                return urlBase;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public static void RemoveUrlReservationFromAcl(string urlBase)
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                return;
+
+            try
+            {
+
+                string cmd, args;
+
+                if (Environment.OSVersion.Version.Major < 6)
+                {
+                    cmd = "httpcfg";
+                    args = string.Format(@"delete urlacl /u {0}", urlBase);
+                }
+                else
+                {
+                    cmd = "netsh";
+                    args = string.Format(@"http delete urlacl url={0}", urlBase);
+                }
+
+                var psi = new ProcessStartInfo(cmd, args)
+                {
+                    Verb = "runas",
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    UseShellExecute = true
+                };
+
+                Process.Start(psi).WaitForExit();
+            }
+            catch
+            {
+                /* ignore */
             }
         }
 

@@ -1,7 +1,7 @@
 #if !SILVERLIGHT && !XBOX
-using ServiceStack.ServiceHost;
+using ServiceStack.Server;
 
-namespace ServiceStack.Common
+namespace ServiceStack
 {
     public static class RequestContextExtensions
     {

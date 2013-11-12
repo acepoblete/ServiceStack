@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
-using ServiceStack.Common;
-using ServiceStack.Common.Extensions;
+using ServiceStack.Server;
 using ServiceStack.ServiceHost;
+using ServiceStack.Text;
+using ServiceStack.Web;
 using ServiceStack.WebHost.Endpoints;
 
 namespace ServiceStack.Api.Swagger
@@ -140,6 +140,8 @@ namespace ServiceStack.Api.Swagger
     {
         internal static bool UseCamelCaseModelPropertyNames { get; set; }
         internal static bool UseLowercaseUnderscoreModelPropertyNames { get; set; }
+        internal static bool DisableAutoDtoInBodyParam { get; set; }
+
         private readonly Regex nicknameCleanerRegex = new Regex(@"[\{\}\*\-_/]*", RegexOptions.Compiled);
 
         public object Get(ResourceRequest request)
@@ -161,10 +163,10 @@ namespace ServiceStack.Api.Swagger
             {
                 basePath = basePath.Substring(0, basePath.LastIndexOf(SwaggerResourcesService.RESOURCE_PATH, StringComparison.OrdinalIgnoreCase));
             }
-
+            var meta = EndpointHost.Metadata;
             foreach (var key in map.Keys)
             {
-                paths.AddRange(map[key].Where(x => x.Path == path || x.Path.StartsWith(path + "/")));
+                paths.AddRange(map[key].Where(x => (x.Path == path || x.Path.StartsWith(path + "/") && meta.IsVisible(Request, Format.Json, x.RequestType.Name))));
             }
 
             var models = new Dictionary<string, SwaggerModel>();
@@ -434,14 +436,17 @@ namespace ServiceStack.Api.Swagger
                     });
             }
 
-            if (!ServiceStack.Common.Web.HttpMethods.Get.Equals(verb, StringComparison.OrdinalIgnoreCase) && !methodOperationParameters.Any(p => p.ParamType.Equals("body", StringComparison.OrdinalIgnoreCase)))
+            if (!DisableAutoDtoInBodyParam)
             {
-                ParseModel(models, operationType);
-                methodOperationParameters.Add(new MethodOperationParameter()
+                if (!HttpMethods.Get.Equals(verb, StringComparison.OrdinalIgnoreCase) && !methodOperationParameters.Any(p => p.ParamType.Equals("body", StringComparison.OrdinalIgnoreCase)))
                 {
-                    DataType = GetSwaggerTypeName(operationType),
-                    ParamType = "body"
-                });
+                    ParseModel(models, operationType);
+                    methodOperationParameters.Add(new MethodOperationParameter()
+                    {
+                        DataType = GetSwaggerTypeName(operationType),
+                        ParamType = "body"
+                    });
+                }
             }
             return methodOperationParameters;
         }

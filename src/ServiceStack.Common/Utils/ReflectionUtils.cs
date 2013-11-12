@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
-#if NETFX_CORE
 using System.Collections.Concurrent;
-#endif
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
-using ServiceStack.Common.Support;
 using ServiceStack.Logging;
-using ServiceStack.Net30.Collections.Concurrent;
-using ServiceStack.ServiceHost;
+using ServiceStack.Server;
+using ServiceStack.Support;
 using ServiceStack.Text;
 
-namespace ServiceStack.Common.Utils
+namespace ServiceStack.Utils
 {
     [DataContract(Namespace = "http://schemas.servicestack.net/types")]
     public class CustomHttpResult { }
